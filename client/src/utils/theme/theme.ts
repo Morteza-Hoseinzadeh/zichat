@@ -2,16 +2,10 @@ import { createTheme } from '@mui/material/styles';
 
 const baseThemeOptions = {
   breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 900,
-      lg: 1200,
-      xl: 1536,
-    },
+    values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 },
   },
   typography: {
-    fontFamily: "'Vazirmatn', sans-serif",
+    fontFamily: `-apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif`,
   },
 };
 
@@ -20,26 +14,26 @@ export const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#8950F7',
-      light: '#9b59b6',
-      dark: '#4b0082',
+      main: '#A970FF', // Electric Purple
+      light: '#C084FC',
+      dark: '#7C3AED',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#1e90ff',
-      light: '#63b3ed',
-      dark: '#0b60d1',
-      contrastText: '#ffffff',
+      main: '#00FFAA', // Neon Green
+      light: '#5CFFCC',
+      dark: '#00CC88',
+      contrastText: '#000000',
     },
     background: {
-      default: '#f4f4f4',
-      paper: '#ffffff',
+      default: '#F8F8FF', // Mint White
+      paper: '#D4E5FF', // Soft Sky
     },
     text: {
-      primary: '#333333',
-      secondary: '#4b0082',
+      primary: '#1E1E2F', // Midnight
+      secondary: '#A970FF',
     },
-    divider: '#cccccc',
+    divider: '#CCCCCC',
   },
 });
 
@@ -48,25 +42,25 @@ export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#8950F7',
-      light: '#ba7fdc',
-      dark: '#6a0dad',
+      main: '#A970FF', // Electric Purple
+      light: '#C084FC',
+      dark: '#7C3AED',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#1e90ff',
-      light: '#5eaaff',
-      dark: '#187bcd',
-      contrastText: '#ffffff',
+      main: '#00FFAA', // Neon Green
+      light: '#5CFFCC',
+      dark: '#00CC88',
+      contrastText: '#000000',
     },
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: '#1E1E2F', // Midnight Blue
+      paper: '#2A2A3C', // Slightly lighter than Midnight
     },
     text: {
-      primary: '#ffffff',
-      secondary: '#c5a3ff',
+      primary: '#F8F8FF', // Mint White
+      secondary: '#A970FF',
     },
-    divider: '#3c3c3c',
+    divider: '#3C3C3C',
   },
 });
