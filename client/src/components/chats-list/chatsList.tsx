@@ -7,7 +7,7 @@ import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 const mock = [
   {
     id: 1,
-    name: 'پریسا محمدزاده',
+    name: 'سینا شکوری',
     lastMessage: 'سلام، حالت چطوره؟',
     timestamp: '14:23',
     unreadCount: 2,
@@ -15,7 +15,7 @@ const mock = [
   },
   {
     id: 2,
-    name: 'علی حسینی',
+    name: 'آرمان معصومی',
     lastMessage: 'فایل رو دریافت کردم ممنون',
     timestamp: '13:10',
     unreadCount: 0,
