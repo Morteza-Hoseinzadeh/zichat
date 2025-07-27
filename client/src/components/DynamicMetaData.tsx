@@ -6,7 +6,9 @@ const DynamicMetadata: React.FC<any> = ({ title, description, imageUrl, url, key
 
   return (
     <head>
-      <title>{metadata.title}</title>
+      <title>{metadata.title || 'زیچت | چت سریع و بدون دردسر '}</title>
+      <link rel="icon" href="/assets/logo/zichat-logo.png" type="image/x-icon" />
+      <link rel="icon" href="/assets/logo/zichat-logo.png" sizes="32x32" />
     </head>
   );
 };
