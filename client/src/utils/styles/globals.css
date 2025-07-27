@@ -23,8 +23,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-weight: 600;
-  font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  font-family: 'yekanbakh', sans-serif;
 }
 
 body {
