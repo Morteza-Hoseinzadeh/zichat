@@ -16,13 +16,13 @@ export default function UserInfoHeader() {
   const { toggleTheme, isDarkMode } = useThemeMode();
 
   return (
-    <Box mb={3} mt={1} display={'flex'} justifyContent="space-between" alignItems="center">
-      <Box display={'flex'} alignItems="center" gap={1.5}>
-        <Box sx={{ border: '1px solid', borderColor: 'secondary.main', borderRadius: '50%', overflow: 'hidden' }}>
+    <Box mb={4} mt={2} display={'flex'} justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: 2, borderColor: 'primary.main' }}>
+      <Box display={'flex'} alignItems="center" gap={1.2}>
+        <Box sx={{ border: '1px solid', borderColor: 'primary.main', borderRadius: '50%', overflow: 'hidden' }}>
           <Avatar src="/assets/avatars/avatar.png" alt="پریسا-احمدی" sx={{ width: '65px', height: '65px' }} />
         </Box>
         <Box display={'flex'} flexDirection="column">
-          <Box sx={{ cursor: 'pointer' }} mb={0.5}>
+          <Box sx={{ width: 'fit-content', transition: 'all 0.2s ease-in-out', p: 0.2, borderRadius: '8px', cursor: 'pointer', '&:hover': { backgroundColor: 'background.paper' } }} mb={0.5}>
             <Typography color="primary.main" fontWeight={600} variant="body2">
               افزودن وضعیت +
             </Typography>
@@ -33,25 +33,11 @@ export default function UserInfoHeader() {
         </Box>
       </Box>
       <Box display={'flex'} alignItems="center" gap={1}>
-        <IconButton
-          sx={{
-            backgroundColor: isDarkMode ? 'secondary.main' : 'primary.main',
-            color: isDarkMode ? 'background.paper' : '#f2f2f2',
-            '&:hover': { backgroundColor: isDarkMode ? 'secondary.dark' : 'primary.dark' },
-          }}
-          onClick={toggleTheme}
-        >
+        <IconButton sx={{ backgroundColor: 'primary.main', color: '#f2f2f2', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={toggleTheme}>
           {isDarkMode ? <TbSun /> : <TbMoon />}
         </IconButton>
 
-        <IconButton
-          sx={{
-            backgroundColor: isDarkMode ? 'secondary.main' : 'primary.main',
-            color: isDarkMode ? 'background.paper' : '#f2f2f2',
-            '&:hover': { backgroundColor: isDarkMode ? 'secondary.dark' : 'primary.dark' },
-          }}
-          onClick={() => setOpenSearchBox(!openSearchBox)}
-        >
+        <IconButton sx={{ backgroundColor: 'primary.main', color: '#f2f2f2', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => setOpenSearchBox(!openSearchBox)}>
           {openSearchBox ? <IoClose /> : <TbSearch />}
         </IconButton>
       </Box>
