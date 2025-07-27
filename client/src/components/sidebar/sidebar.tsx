@@ -113,7 +113,7 @@ const MobileView = ({ theme }: { theme: Theme }) => (
         <GlitchText text="خوش آمدید به زیچت💜" />
       </Box>
     </Box>
-    <Box sx={{ backgroundColor: theme.palette.background.paper, width: '100%', padding: '10px 0', textAlign: 'center', marginTop: '12px', borderRadius: '8px' }}>
+    <Box sx={{ backgroundColor: theme.palette.background.paper, width: '100%', padding: '10px 0', textAlign: 'center', marginY: '12px', borderRadius: '8px' }}>
       <ScrollingText />
     </Box>
   </Box>
