@@ -27,7 +27,7 @@ export const lightTheme = createTheme({
     },
     background: {
       default: '#F8F8FF', // Mint White
-      paper: '#D4E5FF', // Soft Sky
+      paper: '#e5eeffff', // Soft Sky
     },
     text: {
       primary: '#1E1E2F', // Midnight

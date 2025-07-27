@@ -13,7 +13,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   return (
     <ThemeProvider theme={theme}>
       <body style={{ backgroundColor: theme.palette.background.default }}>
-        <main style={{ position: 'relative', zIndex: 1 }}>{children}</main>
+        <main style={{ position: 'relative', zIndex: 1, margin: '16px' }}>{children}</main>
       </body>
     </ThemeProvider>
   );
