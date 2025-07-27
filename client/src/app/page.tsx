@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import SideBar from '@/components/sidebar/sidebar';
 import ChatsPin from '@/components/chats-pin/chatsPin';
 import UserInfoHeader from '@/components/user-info-header/userInfoHeader';
+import ChatsList from '@/components/chats-list/chatsList';
 
 export default function page() {
   return (
@@ -16,6 +17,7 @@ export default function page() {
       <SideBar />
       <UserInfoHeader />
       <ChatsPin />
+      <ChatsList />
     </motion.div>
   );
 }
