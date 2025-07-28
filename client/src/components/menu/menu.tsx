@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Box, IconButton, useTheme } from '@mui/material';
-import { TbHome, TbUser, TbSettings, TbBell, TbMessage } from 'react-icons/tb';
+import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
+import { TbUser, TbMessage, TbRobotFace, TbNews, TbList } from 'react-icons/tb';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
-  { id: 'home', icon: TbHome },
-  { id: 'user', icon: TbUser },
-  { id: 'message', icon: TbMessage },
-  { id: 'bell', icon: TbBell },
-  { id: 'settings', icon: TbSettings },
+  { id: 'chat-gpt', fa_label: 'چت‌بات', icon: TbRobotFace },
+  { id: 'game', fa_label: 'بازی', icon: TbUser },
+  { id: 'message', fa_label: 'پیام‌ها', icon: TbMessage },
+  { id: 'news', fa_label: 'اخبار', icon: TbNews },
+  { id: 'todo-list', fa_label: 'لیست کارها', icon: TbList },
 ];
 
 export default function CurvedBottomNavigation() {
   const [active, setActive] = useState('message');
-  const theme = useTheme()
+  const theme = useTheme();
 
   return (
     <Box position="fixed" bottom={0} left={0} right={0} display="flex" justifyContent="center" pb={2} zIndex={10}>
@@ -52,17 +52,22 @@ export default function CurvedBottomNavigation() {
                 )}
               </AnimatePresence>
 
-              <IconButton
-                onClick={() => setActive(item.id)}
-                sx={{
-                  color: isActive ? 'transparent' : 'text.secondary',
-                  zIndex: 1,
-                  transition: 'all 0.3s ease',
-                  '&:hover': { color: isActive ? 'transparent' : 'primary.main', transform: 'translateY(-4px)' },
-                }}
-              >
-                <Icon size={24} />
-              </IconButton>
+              <Tooltip title={item.fa_label} arrow placement="top">
+                <IconButton
+                  onClick={() => setActive(item.id)}
+                  sx={{
+                    color: isActive ? 'transparent' : 'text.secondary',
+                    zIndex: 1,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      color: isActive ? 'transparent' : 'primary.main',
+                      transform: 'translateY(-4px)',
+                    },
+                  }}
+                >
+                  <Icon size={24} />
+                </IconButton>
+              </Tooltip>
             </Box>
           );
         })}

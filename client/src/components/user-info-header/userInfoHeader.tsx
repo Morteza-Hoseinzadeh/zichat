@@ -1,17 +1,17 @@
 'use client';
 
 import React from 'react';
-import { alpha, Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
 
 // Icons
-import { TbSun, TbMoon, TbSearch } from 'react-icons/tb';
+import { TbSun, TbMoon, TbSettings } from 'react-icons/tb';
 import { IoClose } from 'react-icons/io5';
 
 // Utils
 import { useThemeMode } from '@/utils/hooks/useThemeMode';
 
 export default function UserInfoHeader() {
-  const [openSearchBox, setOpenSearchBox] = React.useState(false);
+  const [isSettingOpen, setIsSettingOpen] = React.useState(false);
 
   const { toggleTheme, isDarkMode } = useThemeMode();
 
@@ -37,8 +37,8 @@ export default function UserInfoHeader() {
           {isDarkMode ? <TbSun /> : <TbMoon />}
         </IconButton>
 
-        <IconButton sx={{ backgroundColor: 'primary.main', color: '#f2f2f2', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => setOpenSearchBox(!openSearchBox)}>
-          {openSearchBox ? <IoClose /> : <TbSearch />}
+        <IconButton sx={{ backgroundColor: 'primary.main', color: '#f2f2f2', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => setIsSettingOpen(!isSettingOpen)}>
+          {isSettingOpen ? <IoClose /> : <TbSettings />}
         </IconButton>
       </Box>
     </Box>
