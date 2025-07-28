@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Typography, Box, Tabs, Tab } from '@mui/material';
+import { Typography, Box, Tabs, Tab, Button } from '@mui/material';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 import { TbBroadcast, TbRobot, TbUser, TbUsers } from 'react-icons/tb';
 import { useRouter } from 'next/navigation';
@@ -90,17 +90,17 @@ export default function ChatsList() {
         <Typography variant="h4" color="text.primary" fontWeight={100}>
           📁 لیست چت ها
         </Typography>
-        <Typography variant="h6" color="text.primary" fontWeight={700}>
+        <Button variant="text" sx={{ fontSize: 18, border: '1px dashed', borderColor: 'pirmary.main', color: 'pirmary.main', px: 4, borderRadius: '8px' }}>
           مدیریت
-        </Typography>
+        </Button>
       </Box>
       <Box sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: '100%' }}>
         <Box sx={{ width: '100%', mb: 4 }}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="fullWidth" centered textColor="primary" indicatorColor="primary">
-            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="افراد" {...a11yProps(0)} icon={<TbUser size={20} />} iconPosition="start" />
-            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="گروه‌ها" {...a11yProps(1)} icon={<TbUsers size={20} />} iconPosition="start" />
-            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="کانال‌ها" {...a11yProps(2)} icon={<TbBroadcast size={20} />} iconPosition="start" />
-            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="ربات‌ها" {...a11yProps(3)} icon={<TbRobot size={20} />} iconPosition="start" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="افراد" {...a11yProps(0)} icon={<TbUser size={25} />} iconPosition="top" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="گروه‌ها" {...a11yProps(1)} icon={<TbUsers size={25} />} iconPosition="top" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="کانال‌ها" {...a11yProps(2)} icon={<TbBroadcast size={25} />} iconPosition="top" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="ربات‌ها" {...a11yProps(3)} icon={<TbRobot size={25} />} iconPosition="top" />
           </Tabs>
         </Box>
 
@@ -111,9 +111,9 @@ export default function ChatsList() {
               {mock
                 .filter((chat) => chat.type === tabTypes[tabIndex])
                 .map((chat, index) => (
-                  <Box key={chat.id} onClick={() => handleGetChatData(chat.id)} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
-                    <Box width={'100%'} display="flex" alignItems="center" gap={2}>
-                      <Box component="img" src={chat.avatar} alt={chat.name} sx={{ width: 60, height: 60, borderRadius: '50%' }} />
+                  <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
+                    <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.id)}>
+                      <Box component="img" src={chat.avatar} alt={chat.name} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
                       <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
                         <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
                           <Typography variant="h6" color="text.primary" fontWeight={900}>
@@ -135,6 +135,9 @@ export default function ChatsList() {
                         </Box>
                       </Box>
                     </Box>
+                    {/* <Box mr={2} ml={1}>
+                      <input type="checkbox" name="" id="" />
+                    </Box> */}
                   </Box>
                 ))}
             </>

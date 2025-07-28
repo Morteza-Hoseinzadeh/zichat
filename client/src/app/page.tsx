@@ -18,7 +18,7 @@ import Menu from '@/components/menu/menu';
 export default function page() {
   return (
     <Box position={'relative'}>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
         <SideBar />
         <UserInfoHeader />
         <ChatsPin />
