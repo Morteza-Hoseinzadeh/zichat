@@ -1,20 +1,26 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Typography, Box, Tabs, Tab, Button } from '@mui/material';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 import { TbBroadcast, TbRobot, TbUser, TbUsers } from 'react-icons/tb';
-import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 const mock = [
-  { id: 1, type: 'user', name: 'سینا شکوری', lastMessage: 'سلام، حالت چطوره؟', timestamp: '14:23', unreadCount: 2, avatar: '/assets/avatars/avatar.png' },
-  { id: 2, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
-  { id: 3, type: 'group', name: 'تیم طراحی', lastMessage: 'جلسه بعدی کیه؟', timestamp: '11:30', unreadCount: 5, avatar: '/assets/avatars/avatar.png' },
-  { id: 4, type: 'group', name: 'توسعه‌دهندگان وب', lastMessage: 'سورس کد آپلود شد', timestamp: '10:15', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
-  { id: 5, type: 'channel', name: 'کانال اخبار تکنولوژی', lastMessage: 'نسخه جدید React منتشر شد', timestamp: '09:00', unreadCount: 3, avatar: '/assets/avatars/avatar.png' },
-  { id: 6, type: 'channel', name: 'زنگ تفریح', lastMessage: 'جوک روز 😂', timestamp: '08:20', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
-  { id: 7, type: 'bot', name: 'ترجمه‌یار', lastMessage: 'ترجمه: Hello → سلام', timestamp: '07:00', unreadCount: 1, avatar: '/assets/avatars/avatar.png' },
-  { id: 8, type: 'bot', name: 'هواشناسی', lastMessage: 'امروز: آفتابی ☀️', timestamp: '06:30', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
+  { id: 1, type: 'user', name: 'سینا شکوری', lastMessage: 'سلام، حالت چطوره؟', timestamp: '14:23', unreadCount: 2, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 2, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 10, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 11, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 12, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 3, type: 'group', name: 'تیم طراحی', lastMessage: 'جلسه بعدی کیه؟', timestamp: '11:30', unreadCount: 5, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 4, type: 'group', name: 'توسعه‌دهندگان وب', lastMessage: 'سورس کد آپلود شد', timestamp: '10:15', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 100, type: 'group', name: 'توسعه‌دهندگان وب', lastMessage: 'سورس کد آپلود شد', timestamp: '10:15', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 5, type: 'channel', name: 'کانال اخبار تکنولوژی', lastMessage: 'نسخه جدید React منتشر شد', timestamp: '09:00', unreadCount: 3, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 6, type: 'channel', name: 'زنگ تفریح', lastMessage: 'جوک روز 😂', timestamp: '08:20', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 7, type: 'bot', name: 'ترجمه‌یار', lastMessage: 'ترجمه: Hello → سلام', timestamp: '07:00', unreadCount: 1, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 8, type: 'bot', name: 'هواشناسی', lastMessage: 'امروز: آفتابی ☀️', timestamp: '06:30', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 80, type: 'bot', name: 'هواشناسی', lastMessage: 'امروز: آفتابی ☀️', timestamp: '06:30', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
 ];
 
 interface TabPanelProps {
@@ -84,6 +90,11 @@ export default function ChatsList() {
     setValue(newValue);
   };
 
+  const itemVariants: any = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } },
+  };
+
   return (
     <Box mt={6} mb={14}>
       <Box display={'flex'} alignItems="center" justifyContent={'space-between'} mb={2}>
@@ -106,7 +117,7 @@ export default function ChatsList() {
 
         {[0, 1, 2, 3].map((tabIndex) => (
           <CustomTabPanel key={tabIndex} value={value} index={tabIndex}>
-            <>
+            <motion.div variants={itemVariants}>
               <ZichatNewsPinned handleGetChatData={handleGetChatData} />
               {mock
                 .filter((chat) => chat.type === tabTypes[tabIndex])
@@ -135,12 +146,9 @@ export default function ChatsList() {
                         </Box>
                       </Box>
                     </Box>
-                    {/* <Box mr={2} ml={1}>
-                      <input type="checkbox" name="" id="" />
-                    </Box> */}
                   </Box>
                 ))}
-            </>
+            </motion.div>
           </CustomTabPanel>
         ))}
       </Box>

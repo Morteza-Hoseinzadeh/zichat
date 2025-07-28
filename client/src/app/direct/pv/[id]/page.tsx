@@ -8,14 +8,14 @@ import { TbDots } from 'react-icons/tb';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 
 const mock = [
-  { id: 1, type: 'user', name: 'سینا شکوری', lastMessage: 'سلام، حالت چطوره؟', timestamp: '14:23', unreadCount: 2, avatar: '/assets/avatars/avatar.png' },
-  { id: 2, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
-  { id: 3, type: 'group', name: 'تیم طراحی', lastMessage: 'جلسه بعدی کیه؟', timestamp: '11:30', unreadCount: 5, avatar: '/assets/avatars/avatar.png' },
-  { id: 4, type: 'group', name: 'توسعه‌دهندگان وب', lastMessage: 'سورس کد آپلود شد', timestamp: '10:15', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
-  { id: 5, type: 'channel', name: 'کانال اخبار تکنولوژی', lastMessage: 'نسخه جدید React منتشر شد', timestamp: '09:00', unreadCount: 3, avatar: '/assets/avatars/avatar.png' },
-  { id: 6, type: 'channel', name: 'زنگ تفریح', lastMessage: 'جوک روز 😂', timestamp: '08:20', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
-  { id: 7, type: 'bot', name: 'ترجمه‌یار', lastMessage: 'ترجمه: Hello → سلام', timestamp: '07:00', unreadCount: 1, avatar: '/assets/avatars/avatar.png' },
-  { id: 8, type: 'bot', name: 'هواشناسی', lastMessage: 'امروز: آفتابی ☀️', timestamp: '06:30', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
+  { id: 1, type: 'user', name: 'سینا شکوری', lastMessage: 'سلام، حالت چطوره؟', timestamp: '14:23', unreadCount: 2, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 2, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 3, type: 'group', name: 'تیم طراحی', lastMessage: 'جلسه بعدی کیه؟', timestamp: '11:30', unreadCount: 5, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 4, type: 'group', name: 'توسعه‌دهندگان وب', lastMessage: 'سورس کد آپلود شد', timestamp: '10:15', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 5, type: 'channel', name: 'کانال اخبار تکنولوژی', lastMessage: 'نسخه جدید React منتشر شد', timestamp: '09:00', unreadCount: 3, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 6, type: 'channel', name: 'زنگ تفریح', lastMessage: 'جوک روز 😂', timestamp: '08:20', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 7, type: 'bot', name: 'ترجمه‌یار', lastMessage: 'ترجمه: Hello → سلام', timestamp: '07:00', unreadCount: 1, avatar: '/assets/avatars/avatar.jpg' },
+  { id: 8, type: 'bot', name: 'هواشناسی', lastMessage: 'امروز: آفتابی ☀️', timestamp: '06:30', unreadCount: 0, avatar: '/assets/avatars/avatar.jpg' },
 ];
 
 const pageVariants: any = {
@@ -43,7 +43,7 @@ function Header({ onClose }: { onClose: () => void }) {
   return (
     <Box sx={styles.header}>
       <Box display={'flex'} alignItems={'center'} gap={1} sx={{ img: { border: '1px solid', borderColor: checkConnectionStatus.color, borderRadius: '50%' } }}>
-        <img src="/assets/avatars/avatar.png" alt="avatar.png" width={65} height={65} />
+        <img src="/assets/avatars/avatar.jpg" alt="avatar.jpg" width={65} height={65} />
         <Box>
           <Typography variant="h6" fontWeight={900} color="text.primary">
             محمد رفعتی

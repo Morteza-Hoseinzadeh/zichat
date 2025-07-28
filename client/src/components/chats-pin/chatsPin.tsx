@@ -33,11 +33,11 @@ export default function ChatsPin() {
         {Array.from({ length: 2 }).map((_, index) => (
           <Box key={index} className="keen-slider__slide" p={2} sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: 'fit-content' }}>
             <Box sx={{ border: '1px solid', borderColor: 'primary.main', borderRadius: '50%', overflow: 'hidden', width: '100px', height: '100px', mx: 'auto' }}>
-              <img src="/assets/avatars/avatar.png" alt={`avatar-${index}`} width="100%" height="100%" />
+              <img src="/assets/avatars/avatar.jpg" alt={`avatar-${index}`} width="100%" height="100%" />
             </Box>
             <Box mt={1}>
               <Typography variant="body1" color="text.primary" fontWeight={900}>
-                پریسا محمدزاده
+                مرتضی حسین زاده
               </Typography>
             </Box>
           </Box>
