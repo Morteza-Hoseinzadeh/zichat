@@ -79,8 +79,8 @@ export default function CurvedBottomNavigation() {
 const styles = {
   container: {
     position: 'relative',
-    width: '90%',
-    maxWidth: 460,
+    width: '100%',
+    maxWidth: '100%',
     height: 70,
     backgroundColor: 'background.paper',
     border: '2px dashed',
@@ -89,6 +89,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     px: 3,
+    mx: 2,
     boxShadow: '0px 4px 20px rgba(0,0,0,0.2)',
     transition: 'all 0.3s ease-in-out',
   },
