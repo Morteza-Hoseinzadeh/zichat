@@ -4,87 +4,17 @@ import React from 'react';
 import { Typography, Box, Tabs, Tab } from '@mui/material';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 import { TbBroadcast, TbRobot, TbUser, TbUsers } from 'react-icons/tb';
+import { useRouter } from 'next/navigation';
 
 const mock = [
-  // 🧍 افراد
-  {
-    id: 1,
-    type: 'user',
-    name: 'سینا شکوری',
-    lastMessage: 'سلام، حالت چطوره؟',
-    timestamp: '14:23',
-    unreadCount: 2,
-    avatar: '/assets/avatars/avatar.png',
-  },
-  {
-    id: 2,
-    type: 'user',
-    name: 'آرمان معصومی',
-    lastMessage: 'فایل رو دریافت کردم ممنون',
-    timestamp: '13:10',
-    unreadCount: 0,
-    avatar: '/assets/avatars/avatar.png',
-  },
-
-  // 👥 گروه‌ها
-  {
-    id: 3,
-    type: 'group',
-    name: 'تیم طراحی',
-    lastMessage: 'جلسه بعدی کیه؟',
-    timestamp: '11:30',
-    unreadCount: 5,
-    avatar: '/assets/avatars/avatar.png',
-  },
-  {
-    id: 4,
-    type: 'group',
-    name: 'توسعه‌دهندگان وب',
-    lastMessage: 'سورس کد آپلود شد',
-    timestamp: '10:15',
-    unreadCount: 0,
-    avatar: '/assets/avatars/avatar.png',
-  },
-
-  // 📡 کانال‌ها
-  {
-    id: 5,
-    type: 'channel',
-    name: 'کانال اخبار تکنولوژی',
-    lastMessage: 'نسخه جدید React منتشر شد',
-    timestamp: '09:00',
-    unreadCount: 3,
-    avatar: '/assets/avatars/avatar.png',
-  },
-  {
-    id: 6,
-    type: 'channel',
-    name: 'زنگ تفریح',
-    lastMessage: 'جوک روز 😂',
-    timestamp: '08:20',
-    unreadCount: 0,
-    avatar: '/assets/avatars/avatar.png',
-  },
-
-  // 🤖 ربات‌ها
-  {
-    id: 7,
-    type: 'bot',
-    name: 'ترجمه‌یار',
-    lastMessage: 'ترجمه: Hello → سلام',
-    timestamp: '07:00',
-    unreadCount: 1,
-    avatar: '/assets/avatars/avatar.png',
-  },
-  {
-    id: 8,
-    type: 'bot',
-    name: 'هواشناسی',
-    lastMessage: 'امروز: آفتابی ☀️',
-    timestamp: '06:30',
-    unreadCount: 0,
-    avatar: '/assets/avatars/avatar.png',
-  },
+  { id: 1, type: 'user', name: 'سینا شکوری', lastMessage: 'سلام، حالت چطوره؟', timestamp: '14:23', unreadCount: 2, avatar: '/assets/avatars/avatar.png' },
+  { id: 2, type: 'user', name: 'آرمان معصومی', lastMessage: 'فایل رو دریافت کردم ممنون', timestamp: '13:10', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
+  { id: 3, type: 'group', name: 'تیم طراحی', lastMessage: 'جلسه بعدی کیه؟', timestamp: '11:30', unreadCount: 5, avatar: '/assets/avatars/avatar.png' },
+  { id: 4, type: 'group', name: 'توسعه‌دهندگان وب', lastMessage: 'سورس کد آپلود شد', timestamp: '10:15', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
+  { id: 5, type: 'channel', name: 'کانال اخبار تکنولوژی', lastMessage: 'نسخه جدید React منتشر شد', timestamp: '09:00', unreadCount: 3, avatar: '/assets/avatars/avatar.png' },
+  { id: 6, type: 'channel', name: 'زنگ تفریح', lastMessage: 'جوک روز 😂', timestamp: '08:20', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
+  { id: 7, type: 'bot', name: 'ترجمه‌یار', lastMessage: 'ترجمه: Hello → سلام', timestamp: '07:00', unreadCount: 1, avatar: '/assets/avatars/avatar.png' },
+  { id: 8, type: 'bot', name: 'هواشناسی', lastMessage: 'امروز: آفتابی ☀️', timestamp: '06:30', unreadCount: 0, avatar: '/assets/avatars/avatar.png' },
 ];
 
 interface TabPanelProps {
@@ -92,6 +22,8 @@ interface TabPanelProps {
   index: number;
   value: number;
 }
+
+const tabTypes = ['user', 'group', 'channel', 'bot'];
 
 const ZichatNewsPinned = ({ handleGetChatData }: { handleGetChatData: (chat_id: string | number) => void }) => (
   <Box onClick={() => handleGetChatData('xyz-abcd-efg')} sx={{ ...styles.chats_container, p: 2, my: 1, border: '2px dashed', borderColor: 'secondary.main', borderRadius: '12px' }}>
@@ -141,12 +73,11 @@ function a11yProps(index: number) {
 }
 
 export default function ChatsList() {
-  const tabTypes = ['user', 'group', 'channel', 'bot'];
-
   const [value, setValue] = React.useState(0);
+  const router = useRouter();
 
   const handleGetChatData = (chat_id: string | number) => {
-    console.log(chat_id);
+    router.push(`/direct/pv/${chat_id}`);
   };
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -164,15 +95,13 @@ export default function ChatsList() {
         </Typography>
       </Box>
       <Box sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: '100%' }}>
-        <Box sx={{ width: '100%' }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="fullWidth" centered textColor="primary" indicatorColor="primary">
-              <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="افراد" {...a11yProps(0)} icon={<TbUser size={20} />} iconPosition="start" />
-              <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="گروه‌ها" {...a11yProps(1)} icon={<TbUsers size={20} />} iconPosition="start" />
-              <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="کانال‌ها" {...a11yProps(2)} icon={<TbBroadcast size={20} />} iconPosition="start" />
-              <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="ربات‌ها" {...a11yProps(3)} icon={<TbRobot size={20} />} iconPosition="start" />
-            </Tabs>
-          </Box>
+        <Box sx={{ width: '100%', mb: 4 }}>
+          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="fullWidth" centered textColor="primary" indicatorColor="primary">
+            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="افراد" {...a11yProps(0)} icon={<TbUser size={20} />} iconPosition="start" />
+            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="گروه‌ها" {...a11yProps(1)} icon={<TbUsers size={20} />} iconPosition="start" />
+            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="کانال‌ها" {...a11yProps(2)} icon={<TbBroadcast size={20} />} iconPosition="start" />
+            <Tab sx={{ fontSize: 17, gap: 1, fontWeight: 700 }} label="ربات‌ها" {...a11yProps(3)} icon={<TbRobot size={20} />} iconPosition="start" />
+          </Tabs>
         </Box>
 
         {[0, 1, 2, 3].map((tabIndex) => (
