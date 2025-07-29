@@ -146,10 +146,10 @@ function Keyboard() {
 
   return (
     <Box sx={styles.input_container}>
-      <Box mb={1}>
+      <Box>
         <IconButton sx={{ mr: '8px' }}>{showButton ? <TbSend2 color={theme.palette.text.primary} size={24} /> : <TbMicrophone color={theme.palette.text.primary} size={24} />}</IconButton>
       </Box>
-      <Box position="relative" width="100%">
+      <Box position="relative" width="100%" mt={1}>
         <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={({ target }) => setInput(target.value)} />
         <Box position="absolute" top={9} left={17}>
           <TbSticker size={27} color={theme.palette.text.primary} />
