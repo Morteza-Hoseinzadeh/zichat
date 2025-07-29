@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Box, Button, IconButton, Typography, useTheme } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
 
-// Framer motion imports
+import { useParams, useRouter } from 'next/navigation';
+
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Utils
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 
-// Icons
-import { TbBookmarks, TbDots, TbEdit } from 'react-icons/tb';
+import { TbArrowRight, TbBookmarks, TbDots, TbEdit, TbMicrophone, TbPlus, TbSend2, TbSticker } from 'react-icons/tb';
 import { RiCheckDoubleLine } from 'react-icons/ri';
 import { RxHamburgerMenu } from 'react-icons/rx';
 
@@ -27,88 +26,14 @@ export const mock = [
     last_seen: '22:14',
     status: 'offline',
     pinned_messages: ['xyz-abcde-fgh'],
-    messages: [
-      {
-        id: 'xyz-abcde-fgi-1',
-        message: 'سلام قربونت تو چطوری سلام قربونت تو چطوری ...',
-        timestamp: '14:28',
-        self: true,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-      {
-        id: 'xyz-abcde-fgh-2',
-        message: 'سلام، حالت چطوره؟',
-        timestamp: '14:23',
-        self: false,
-        read_by_receiver: true,
-        message_edited: false,
-      },
-      {
-        id: 'xyz-abcde-fgi-3',
-        message: 'سلام قربونت تو چطوری',
-        timestamp: '14:28',
-        self: true,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-      {
-        id: 'xyz-abcde-fgh-4',
-        message: 'سلام، حالت چطوره؟',
-        timestamp: '14:23',
-        self: false,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-      {
-        id: 'xyz-abcde-fgi-5',
-        message: 'سلام قربونت تو چطوری',
-        timestamp: '14:28',
-        self: true,
-        read_by_receiver: true,
-        message_edited: false,
-      },
-      {
-        id: 'xyz-abcde-fgh-6',
-        message: 'سلام، حالت چطوره؟',
-        timestamp: '14:23',
-        self: false,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-      {
-        id: 'xyz-abcde-fgi-7',
-        message: 'سلام قربونت تو چطوری',
-        timestamp: '14:28',
-        self: true,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-      {
-        id: 'xyz-abcde-fgh-8',
-        message: 'سلام، حالت چطوره؟',
-        timestamp: '14:23',
-        self: false,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-      {
-        id: 'xyz-abcde-fgi-9',
-        message: 'سلام قربونت تو چطوری',
-        timestamp: '14:28',
-        self: true,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-      {
-        id: 'xyz-abcde-fgh-10',
-        message: 'سلام، حالت چطوره؟',
-        timestamp: '14:23',
-        self: false,
-        read_by_receiver: true,
-        message_edited: true,
-      },
-    ],
+    messages: [...Array(10)].map((_, i) => ({
+      id: `msg-${i + 1}`,
+      message: i % 2 === 0 ? 'سلام قربونت تو چطوری' : 'سلام، حالت چطوره؟',
+      timestamp: '14:28',
+      self: i % 2 === 0,
+      read_by_receiver: true,
+      message_edited: i % 3 === 0,
+    })),
   },
 ];
 
@@ -127,47 +52,35 @@ const pageVariants: any = {
 };
 
 function Header({ onClose }: { onClose: () => void }) {
-  const checkConnection = {
-    online: { lable: 'آنلاین', value: 'online', color: 'secondary.main' },
-    offline: { lable: 'آفلاین', value: 'offline', color: 'error.main' },
+  const status = {
+    label: 'آنلاین',
+    color: 'secondary.main',
   };
 
-  const checkConnectionStatus = checkConnection['online'];
-
   return (
-    <Box sx={styles.header_container}>
-      <Box sx={styles.header}>
-        <Box display={'flex'} alignItems={'center'} gap={1} sx={{ img: { border: '1px solid', borderColor: checkConnectionStatus.color, borderRadius: '50%' } }}>
-          <img src="/assets/avatars/avatar.jpg" alt="avatar.jpg" width={65} height={65} />
-          <Box>
-            <Typography variant="h6" fontWeight={900} color="text.primary">
-              محمد رفعتی
-            </Typography>
-            <Box display={'flex'} alignItems={'center'} gap={0.5}>
-              <Box sx={{ backgroundColor: checkConnectionStatus.color, width: '12px', height: '12px', display: 'inline-block', borderRadius: '50%' }} />
-              <Typography variant="body1" color="text.disabled">
-                {checkConnectionStatus.lable}
-              </Typography>
-              {/* <Typography variant="body1" color="text.disabled" className="typing">
-              در حال نوشتن
-            </Typography>
+    <Box sx={styles.header}>
+      <Box display="flex" alignItems="center" gap={1} sx={{ img: { border: '1px solid', borderColor: status.color, borderRadius: '50%' } }}>
+        <IconButton onClick={onClose}>
+          <TbArrowRight />
+        </IconButton>
+        <img src="/assets/avatars/avatar.jpg" alt="avatar" width={65} height={65} />
+        <Box>
+          <Typography variant="h6" fontWeight={900} color="text.primary">
+            محمد رفعتی
+          </Typography>
+          <Box display="flex" alignItems="center" gap={0.5}>
+            <Box sx={{ backgroundColor: status.color, width: 12, height: 12, borderRadius: '50%' }} />
             <Typography variant="body1" color="text.disabled">
-              آخرین بازدید در {ConvertToPersianDigit('19:34')}
-            </Typography> */}
-            </Box>
+              {status.label}
+            </Typography>
           </Box>
         </Box>
-        <Box display={'flex'} alignItems={'center'}>
-          <Box mt={0.5}>
-            <Button variant="text" sx={{ fontSize: 18, px: 2, borderRadius: '12px' }} onClick={onClose}>
-              بازگشت
-            </Button>
-          </Box>
-          <Box sx={{ transform: 'rotate(90deg)' }}>
-            <IconButton>
-              <TbDots />
-            </IconButton>
-          </Box>
+      </Box>
+      <Box display="flex" alignItems="center">
+        <Box sx={{ transform: 'rotate(90deg)' }}>
+          <IconButton>
+            <TbDots />
+          </IconButton>
         </Box>
       </Box>
     </Box>
@@ -175,71 +88,75 @@ function Header({ onClose }: { onClose: () => void }) {
 }
 
 function Keyboard() {
+  const theme = useTheme();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [input, setInput] = useState('');
+  const [showButton, setShowButton] = useState(false);
+
+  useEffect(() => {
+    setShowButton(input.trim() !== '');
+  }, [input]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      const ref = textareaRef.current;
+      ref.style.height = 'auto';
+      ref.style.height = `${ref.scrollHeight}px`;
+      ref.style.overflowY = input.length > 1 ? 'auto' : 'hidden';
+    }
+  }, [input]);
+
   return (
-    <Box sx={styles.input}>
-      <input type="text" placeholder="پیام خود را بنویسید" style={styles.textInput} />
+    <Box sx={styles.input_container}>
+      <Box mb={1}>
+        <IconButton sx={{ mr: '8px' }}>{showButton ? <TbSend2 color={theme.palette.text.primary} size={24} /> : <TbMicrophone color={theme.palette.text.primary} size={24} />}</IconButton>
+      </Box>
+      <Box position="relative" width="100%">
+        <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={({ target }) => setInput(target.value)} />
+        <Box position="absolute" top={9} left={17}>
+          <TbSticker size={27} color={theme.palette.text.primary} />
+        </Box>
+      </Box>
+      <Box>
+        <IconButton sx={{ mx: 1 }}>
+          <TbPlus size={24} />
+        </IconButton>
+      </Box>
     </Box>
   );
 }
 
 function ChatsSection() {
   const theme = useTheme();
-  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const fontSize = 17;
 
-  const mock_font_size = 17;
-
-  return mock.map((item, index) => (
-    <Box key={index} flex={1} display={'flex'} flexDirection={'column'} mt={1} mx={'16px'} sx={{ fontSize: mock_font_size }}>
-      <p style={{ textAlign: 'center', color: theme.palette.text.disabled }}>{ConvertToPersianDigit(item.date)}</p>
-
-      {item.messages.map((chat, subIndex) => {
-        const color = chat.self ? theme.palette.primary.dark : theme.palette.secondary.dark;
-        const isHovered = hoveredMessageId === chat.id;
+  return mock.map((chat, index) => (
+    <Box key={index} flex={1} display="flex" flexDirection="column" mt={1} mx="16px" sx={{ fontSize }}>
+      <p style={{ textAlign: 'center', color: theme.palette.text.disabled }}>{ConvertToPersianDigit(chat.date)}</p>
+      {chat.messages.map((msg, i) => {
+        const isSelf = msg.self;
+        const isHovered = hovered === msg.id;
+        const color = isSelf ? theme.palette.primary.dark : theme.palette.secondary.dark;
 
         return (
-          <Box width="100%" key={subIndex} sx={{ display: 'flex', justifyContent: chat.self ? 'right' : 'left', mb: 3 }}>
-            <Box
-              display="flex"
-              alignItems="center"
-              flexDirection={chat.self ? 'row' : 'row-reverse'}
-              gap={1}
-              onMouseEnter={() => setHoveredMessageId(chat.id)}
-              onMouseLeave={() => setHoveredMessageId(null)}
-            >
-              {/* Chat Bubble */}
-              <Box
-                sx={{
-                  ...styles.chat_bubbles,
-                  backgroundColor: color,
-                  borderBottomLeftRadius: chat.self ? '24px' : '0',
-                  borderBottomRightRadius: chat.self ? '0' : '24px',
-                }}
-              >
-                <p style={{ color: theme.palette.text.primary }}>{chat.message}</p>
-                <Box mt={0.5} display="flex" alignItems="center" justifyContent="space-between" flexDirection={chat.self ? 'row' : 'row-reverse'} mx={0.5}>
-                  <p style={{ color: theme.palette.text.disabled }}>{ConvertToPersianDigit(chat.timestamp)}</p>
-                  {chat.self && <RiCheckDoubleLine color={chat.read_by_receiver ? '#0041c2' : theme.palette.text.disabled} />}
+          <Box key={i} width="100%" sx={{ display: 'flex', justifyContent: isSelf ? 'right' : 'left', mb: 3 }}>
+            <Box display="flex" alignItems="center" flexDirection={isSelf ? 'row' : 'row-reverse'} gap={1} onMouseEnter={() => setHovered(msg.id)} onMouseLeave={() => setHovered(null)}>
+              <Box sx={{ ...styles.chat_bubbles, backgroundColor: color, borderBottomLeftRadius: isSelf ? '24px' : '0', borderBottomRightRadius: isSelf ? '0' : '24px' }}>
+                <p style={{ color: theme.palette.text.primary }}>{msg.message}</p>
+                <Box mt={0.5} display="flex" alignItems="center" justifyContent="space-between" flexDirection={isSelf ? 'row' : 'row-reverse'} mx={0.5}>
+                  <p style={{ color: theme.palette.text.disabled }}>{ConvertToPersianDigit(msg.timestamp)}</p>
+                  {isSelf && <RiCheckDoubleLine color={msg.read_by_receiver ? '#0041c2' : theme.palette.text.disabled} />}
                 </Box>
-                {chat.message_edited && (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: chat.self ? 'left' : 'right',
-                      color: theme.palette.text.disabled,
-                      fontSize: mock_font_size - 4,
-                      gap: 0.5,
-                    }}
-                  >
+                {msg.message_edited && (
+                  <Box display="flex" alignItems="center" justifyContent={isSelf ? 'left' : 'right'} color={theme.palette.text.disabled} fontSize={fontSize - 4} gap={0.5}>
                     <span>ویرایش شده</span>
                     <TbEdit />
                   </Box>
                 )}
               </Box>
-
-              {/* Action Buttons */}
               {isHovered && (
-                <Box display="flex" flexDirection="column" alignItems="center" justifyContent="space-around">
+                <Box display="flex" flexDirection="column" alignItems="center">
                   <IconButton>
                     <RxHamburgerMenu size={26} />
                   </IconButton>
@@ -261,7 +178,7 @@ export default function ChatView() {
   const router = useRouter();
   const [show, setShow] = useState(true);
 
-  const chat = mock.find((chat) => String(chat.id) === String(id));
+  const chat = mock.find((c) => String(c.id) === String(id));
   if (!chat) return null;
 
   const handleClose = () => {
@@ -286,36 +203,56 @@ const styles: any = {
   overlay: {
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: 'background.default',
-  },
-  header_container: {
-    position: 'sticky',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 9999,
-    background: 'rgba(255, 255, 255, 0)',
-    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-    backdropFilter: 'blur(8.7px)',
+    backgroundImage: 'url("/assets/overlays/chat-background-overlay.png")',
+    backgroundRepeat: 'repeat',
+    backgroundAttachment: 'fixed',
+    flex: 1,
+    minHeight: '100%',
   },
   header: {
     padding: '12px 16px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'background.paper',
-    borderRadius: '16px',
-    m: 2,
+    position: 'sticky',
+    top: 0,
+    zIndex: 9999,
+    backgroundColor: 'rgba(255, 255, 255, 0.0)',
+    backdropFilter: 'blur(8.7px)',
   },
-  input: {
+  input_container: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 1,
+    width: '100%',
     backgroundColor: 'background.paper',
+    position: 'sticky',
+    bottom: 0,
+    py: 2,
+    borderRadius: '24px 24px 0px 0px',
+    textarea: {
+      transition: 'height 0.2s ease',
+      height: '2500px',
+      color: 'text.primary',
+      backgroundColor: 'background.default',
+      '&:focus': {
+        border: 'none',
+        outline: 'none',
+      },
+    },
   },
   textInput: {
     width: '100%',
-    padding: '12px',
+    padding: '10px',
     borderRadius: '12px',
-    fontSize: '15px',
+    resize: 'none',
+    overflow: 'hidden',
+    border: 'none',
+    outline: 'none',
+    fontSize: '16px',
+    lineHeight: '24px',
+    transition: 'height 0.2s ease',
   },
   chat_bubbles: {
     p: 2,
