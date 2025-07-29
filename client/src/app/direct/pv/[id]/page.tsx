@@ -301,7 +301,7 @@ function ChatsSection() {
         );
       })}
       {showSnackbar && (
-        <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="warning">
+        <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="success">
           <span>پیام کپی شد!</span>
         </CustomSnackbar>
       )}
