@@ -15,6 +15,8 @@ import { RiCheckDoubleLine } from 'react-icons/ri';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import { IoPersonSharp } from 'react-icons/io5';
 import { MdNotificationsOff, MdReply } from 'react-icons/md';
+import { TbPhoto, TbMapPin, TbChartBar, TbAddressBook, TbFile } from 'react-icons/tb';
+
 import CustomSnackbar from '@/components/custom/CustomSnackbar';
 
 const mock = [
@@ -130,6 +132,8 @@ function Keyboard() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState('');
   const [showButton, setShowButton] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
   useEffect(() => {
     setShowButton(input.trim() !== '');
@@ -144,21 +148,66 @@ function Keyboard() {
     }
   }, [input]);
 
+  const menuItems = [
+    { label: 'گالری', icon: <TbPhoto size={20} />, function: () => console.log('TbPhoto') },
+    { label: 'موقعیت مکانی', icon: <TbMapPin size={20} />, function: () => console.log('TbMapPin') },
+    { label: 'نظرسنجی', icon: <TbChartBar size={20} />, function: () => console.log('TbChartBar') },
+    { label: 'مخاطب', icon: <TbAddressBook size={20} />, function: () => console.log('TbAddressBook') },
+    { label: 'فایل', icon: <TbFile size={20} />, function: () => console.log('TbFile') },
+  ];
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
-    <Box sx={styles.input_container}>
+    <Box sx={{ position: 'relative', ...styles.input_container }}>
       <Box>
         <IconButton sx={{ mr: '8px' }}>{showButton ? <TbSend2 color={theme.palette.text.primary} size={24} /> : <TbMicrophone color={theme.palette.text.primary} size={24} />}</IconButton>
       </Box>
+
       <Box position="relative" width="100%" mt={1}>
         <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={({ target }) => setInput(target.value)} />
-        <Box position="absolute" top={9} left={17}>
-          <TbSticker size={27} color={theme.palette.text.primary} />
+        <Box position="absolute" top={0.5} left={17}>
+          <IconButton>
+            <TbSticker size={27} color={theme.palette.text.primary} />
+          </IconButton>
         </Box>
       </Box>
+
       <Box>
-        <IconButton sx={{ mx: 1 }}>
+        <IconButton sx={{ mx: 1 }} onClick={handleMenuOpen}>
           <TbPlus size={24} />
         </IconButton>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+          anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          PaperProps={{
+            sx: { borderRadius: 2, minWidth: 140, boxShadow: '0px 6px 16px rgba(0,0,0,0.15)' },
+          }}
+        >
+          {menuItems.map((item) => (
+            <MenuItem
+              key={item.label}
+              onClick={() => {
+                handleMenuClose();
+                item.function();
+              }}
+              sx={{ display: 'flex', gap: 1 }}
+            >
+              {item.icon}
+              {item.label}
+            </MenuItem>
+          ))}
+        </Menu>
       </Box>
     </Box>
   );
