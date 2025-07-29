@@ -108,10 +108,10 @@ export default function ChatsList() {
       <Box sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: '100%' }}>
         <Box sx={{ width: '100%', mb: 4 }}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="fullWidth" centered textColor="primary" indicatorColor="primary">
-            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="افراد" {...a11yProps(0)} icon={<TbUser size={25} />} iconPosition="top" />
-            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="گروه‌ها" {...a11yProps(1)} icon={<TbUsers size={25} />} iconPosition="top" />
-            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="کانال‌ها" {...a11yProps(2)} icon={<TbBroadcast size={25} />} iconPosition="top" />
-            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} label="ربات‌ها" {...a11yProps(3)} icon={<TbRobot size={25} />} iconPosition="top" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} {...a11yProps(0)} icon={<TbUser size={25} />} iconPosition="top" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} {...a11yProps(1)} icon={<TbUsers size={25} />} iconPosition="top" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} {...a11yProps(2)} icon={<TbBroadcast size={25} />} iconPosition="top" />
+            <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} {...a11yProps(3)} icon={<TbRobot size={25} />} iconPosition="top" />
           </Tabs>
         </Box>
 

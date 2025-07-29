@@ -37,7 +37,7 @@ export default function ChatsPin() {
             </Box>
             <Box mt={1}>
               <Typography variant="body1" color="text.primary" fontWeight={900}>
-                مرتضی حسین زاده
+                مهدی محمدی
               </Typography>
             </Box>
           </Box>
