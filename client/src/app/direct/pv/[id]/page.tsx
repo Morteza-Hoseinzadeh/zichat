@@ -4,17 +4,20 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useParams, useRouter } from 'next/navigation';
 
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Menu, MenuItem, Typography, useTheme, Snackbar, Alert } from '@mui/material';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 
-import { TbArrowRight, TbBookmarks, TbDots, TbEdit, TbMicrophone, TbPlus, TbSend2, TbSticker } from 'react-icons/tb';
+import { TbSearch, TbTrash, TbX, TbArrowRight, TbDots, TbEdit, TbMicrophone, TbPlus, TbSend2, TbSticker, TbCopy, TbArrowForward } from 'react-icons/tb';
 import { RiCheckDoubleLine } from 'react-icons/ri';
 import { RxHamburgerMenu } from 'react-icons/rx';
+import { IoPersonSharp } from 'react-icons/io5';
+import { MdNotificationsOff, MdReply } from 'react-icons/md';
+import CustomSnackbar from '@/components/custom/CustomSnackbar';
 
-export const mock = [
+const mock = [
   {
     id: 1,
     type: 'user',
@@ -52,10 +55,17 @@ const pageVariants: any = {
 };
 
 function Header({ onClose }: { onClose: () => void }) {
-  const status = {
-    label: 'آنلاین',
-    color: 'secondary.main',
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const status = { label: 'آنلاین', color: 'secondary.main' };
 
   return (
     <Box sx={styles.header}>
@@ -78,10 +88,38 @@ function Header({ onClose }: { onClose: () => void }) {
       </Box>
       <Box display="flex" alignItems="center">
         <Box sx={{ transform: 'rotate(90deg)' }}>
-          <IconButton>
+          <IconButton onClick={handleMenuClick}>
             <TbDots />
           </IconButton>
         </Box>
+        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+            <IoPersonSharp />
+            اطلاعات مخاطب
+          </MenuItem>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+            <MdNotificationsOff />
+            بی‌صدا کردن
+          </MenuItem>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+            <TbSearch />
+            جستجو در گفتگو
+          </MenuItem>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+            <TbTrash />
+            پاک کردن گفتگو
+          </MenuItem>
+          <MenuItem
+            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            onClick={() => {
+              handleClose();
+              onClose();
+            }}
+          >
+            <TbX />
+            بستن گفتگو
+          </MenuItem>
+        </Menu>
       </Box>
     </Box>
   );
@@ -129,6 +167,28 @@ function Keyboard() {
 function ChatsSection() {
   const theme = useTheme();
   const [hovered, setHovered] = useState<string | null>(null);
+
+  const [showSnackbar, setShowSnackbar] = useState(false);
+
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, id: string) => {
+    setMenuAnchorEl(event.currentTarget);
+    setOpenMenuId(id);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setOpenMenuId(null);
+  };
+
+  const handleCopyMessage = (msg: any) => {
+    handleMenuClose();
+    navigator.clipboard.writeText(msg.message);
+    setShowSnackbar(true);
+  };
+
   const fontSize = 17;
 
   return mock.map((chat, index) => (
@@ -157,18 +217,45 @@ function ChatsSection() {
               </Box>
               {isHovered && (
                 <Box display="flex" flexDirection="column" alignItems="center">
-                  <IconButton>
+                  <IconButton onClick={(e) => handleMenuClick(e, msg.id)}>
                     <RxHamburgerMenu size={26} />
                   </IconButton>
                   <IconButton>
-                    <TbBookmarks size={26} />
+                    <TbEdit size={26} />
                   </IconButton>
                 </Box>
               )}
+              <Menu anchorEl={menuAnchorEl} open={openMenuId === msg.id} onClose={handleMenuClose}>
+                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                  <MdReply />
+                  پاسخ
+                </MenuItem>
+                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleCopyMessage(chat.messages)}>
+                  <TbCopy />
+                  کپی
+                </MenuItem>
+                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                  <TbEdit />
+                  ویرایش
+                </MenuItem>
+                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                  <TbTrash />
+                  حذف
+                </MenuItem>
+                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                  <TbArrowForward />
+                  فوروارد
+                </MenuItem>
+              </Menu>
             </Box>
           </Box>
         );
       })}
+      {showSnackbar && (
+        <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="warning">
+          <span>پیام کپی شد!</span>
+        </CustomSnackbar>
+      )}
     </Box>
   ));
 }
