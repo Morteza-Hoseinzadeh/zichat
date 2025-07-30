@@ -117,51 +117,44 @@ export default function ChatsList() {
 
         {[0, 1, 2, 3].map((tabIndex) => (
           <CustomTabPanel key={tabIndex} value={value} index={tabIndex}>
-            <Box sx={{ ...fade_content, maxHeight: '45vh', overflowY: 'hidden' }}>
-              <motion.div variants={itemVariants}>
-                <ZichatNewsPinned handleGetChatData={handleGetChatData} />
-                {mock
-                  .filter((chat) => chat.type === tabTypes[tabIndex])
-                  .map((chat, index) => (
-                    <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
-                      <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.id)}>
-                        <Box component="img" src={chat.avatar} alt={chat.name} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
-                        <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
-                          <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
-                            <Typography variant="h6" color="text.primary" fontWeight={900}>
-                              {chat.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.primary">
-                              {ConvertToPersianDigit(chat.timestamp)}
-                            </Typography>
-                          </Box>
-                          <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
-                            <Typography variant="body1" color="text.secondary" noWrap>
-                              {chat.lastMessage}
-                            </Typography>
-                            {chat.unreadCount > 0 && (
-                              <Box mt={0.5} bgcolor="secondary.main" color="black" px={1} borderRadius="12px" fontSize="1em" display="inline-block">
-                                {ConvertToPersianDigit(chat.unreadCount)}
-                              </Box>
-                            )}
-                          </Box>
+            <motion.div variants={itemVariants}>
+              <ZichatNewsPinned handleGetChatData={handleGetChatData} />
+              {mock
+                .filter((chat) => chat.type === tabTypes[tabIndex])
+                .map((chat, index) => (
+                  <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
+                    <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.id)}>
+                      <Box component="img" src={chat.avatar} alt={chat.name} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
+                      <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
+                          <Typography variant="h6" color="text.primary" fontWeight={900}>
+                            {chat.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.primary">
+                            {ConvertToPersianDigit(chat.timestamp)}
+                          </Typography>
+                        </Box>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
+                          <Typography variant="body1" color="text.secondary" noWrap>
+                            {chat.lastMessage}
+                          </Typography>
+                          {chat.unreadCount > 0 && (
+                            <Box mt={0.5} bgcolor="secondary.main" color="black" px={1} borderRadius="12px" fontSize="1em" display="inline-block">
+                              {ConvertToPersianDigit(chat.unreadCount)}
+                            </Box>
+                          )}
                         </Box>
                       </Box>
                     </Box>
-                  ))}
-              </motion.div>
-            </Box>
+                  </Box>
+                ))}
+            </motion.div>
           </CustomTabPanel>
         ))}
       </Box>
     </Box>
   );
 }
-
-const fade_content = {
-  maskImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 100%)',
-  overflow: 'auto',
-};
 
 const styles = {
   chats_container: {

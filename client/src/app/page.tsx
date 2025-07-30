@@ -39,7 +39,9 @@ export default function Page() {
         </AnimatedMotion>
 
         <AnimatedMotion>
-          <ChatsList />
+          <Box sx={fade_content}>
+            <ChatsList />
+          </Box>
         </AnimatedMotion>
 
         <motion.div variants={containerVariants}>
@@ -49,3 +51,8 @@ export default function Page() {
     </Box>
   );
 }
+
+const fade_content = {
+  maskImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 100%)',
+  overflow: 'auto',
+};
