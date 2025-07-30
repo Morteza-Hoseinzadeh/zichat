@@ -172,7 +172,7 @@ function Keyboard() {
 
       <Box position="relative" width="100%" mt={1}>
         <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={({ target }) => setInput(target.value)} />
-        <Box position="absolute" top={0.5} left={17}>
+        <Box position="absolute" top={0.5} left={7}>
           <IconButton>
             <TbSticker size={27} color={theme.palette.text.primary} />
           </IconButton>
