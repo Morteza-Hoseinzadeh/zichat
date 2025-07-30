@@ -101,8 +101,8 @@ export default function ChatsList() {
         <Typography variant="h4" color="text.primary" fontWeight={100}>
           📁 لیست چت ها
         </Typography>
-        <Button variant="text" sx={{ fontSize: 18, border: '1px dashed', borderColor: 'pirmary.main', color: 'pirmary.main', px: 4, borderRadius: '8px' }}>
-          مدیریت
+        <Button variant="text" sx={{ fontSize: 18, color: 'pirmary.main' }}>
+          نمایش
         </Button>
       </Box>
       <Box sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: '100%' }}>

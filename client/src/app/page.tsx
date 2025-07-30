@@ -9,12 +9,13 @@ import { Box } from '@mui/material';
 import { motion } from 'framer-motion';
 
 // Components
-import SideBar from '@/components/sidebar/sidebar';
-import ChatsPin from '@/components/chats-pin/chatsPin';
-import UserInfoHeader from '@/components/user-info-header/userInfoHeader';
-import ChatsList from '@/components/chats-list/chatsList';
-import Menu from '@/components/menu/menu';
+import SideBar from '@/components/home/sidebar/sidebar';
+import ChatsPin from '@/components/home/chats-pin/chatsPin';
+import UserInfoHeader from '@/components/home/user-info-header/userInfoHeader';
+import ChatsList from '@/components/home/chats-list/chatsList';
+import Menu from '@/components/home/menu/menu';
 import AnimatedMotion from '@/components/AnimatedMotion';
+import News from '@/components/home/news/news';
 
 // Variants
 const containerVariants: any = {
@@ -32,6 +33,10 @@ export default function Page() {
 
         <AnimatedMotion>
           <UserInfoHeader />
+        </AnimatedMotion>
+
+        <AnimatedMotion>
+          <News />
         </AnimatedMotion>
 
         <AnimatedMotion>
