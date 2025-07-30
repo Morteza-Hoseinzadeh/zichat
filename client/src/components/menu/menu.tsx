@@ -2,15 +2,16 @@
 
 import React, { useState } from 'react';
 import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
-import { TbUser, TbMessage, TbRobotFace, TbNews, TbList } from 'react-icons/tb';
+import { TbMessage, TbRobotFace, TbNews, TbList, TbHome, TbDeviceGamepad, TbSettings } from 'react-icons/tb';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
-  { id: 'chat-gpt', fa_label: 'چت‌بات', icon: TbRobotFace },
-  { id: 'game', fa_label: 'بازی', icon: TbUser },
+  { id: 'home', fa_label: 'صفحه اصلی', icon: TbHome },
   { id: 'message', fa_label: 'پیام‌ها', icon: TbMessage },
-  { id: 'news', fa_label: 'اخبار', icon: TbNews },
+  { id: 'chat-gpt', fa_label: 'چت‌بات', icon: TbRobotFace },
+  { id: 'game', fa_label: 'بازی', icon: TbDeviceGamepad },
   { id: 'todo-list', fa_label: 'لیست کارها', icon: TbList },
+  { id: 'setting', fa_label: 'اخبار', icon: TbSettings },
 ];
 
 export default function CurvedBottomNavigation() {

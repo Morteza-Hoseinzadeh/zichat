@@ -32,7 +32,7 @@ interface TabPanelProps {
 const tabTypes = ['user', 'group', 'channel', 'bot'];
 
 const ZichatNewsPinned = ({ handleGetChatData }: { handleGetChatData: (chat_id: string | number) => void }) => (
-  <Box onClick={() => handleGetChatData('xyz-abcd-efg')} sx={{ ...styles.chats_container, p: 2, my: 1, border: '2px dashed', borderColor: 'secondary.main', borderRadius: '12px' }}>
+  <Box onClick={() => handleGetChatData('xyz-abcd-efg')} sx={{ ...styles.chats_container, p: 2, mb: 1, border: '2px dashed', borderColor: 'secondary.main', borderRadius: '12px' }}>
     <Box width={'100%'} display="flex" alignItems="center" gap={2}>
       <Box component="img" src="/assets/logo/zichat-logo.png" alt="Zichat News" sx={{ width: 50, height: 50 }} />
 
@@ -106,7 +106,7 @@ export default function ChatsList() {
         </Button>
       </Box>
       <Box sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: '100%' }}>
-        <Box sx={{ width: '100%', mb: 4 }}>
+        <Box sx={{ width: '100%', mb: 2 }}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="fullWidth" centered textColor="primary" indicatorColor="primary">
             <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} {...a11yProps(0)} icon={<TbUser size={25} />} iconPosition="top" />
             <Tab sx={{ mt: 1, fontSize: 17, gap: 1, fontWeight: 700 }} {...a11yProps(1)} icon={<TbUsers size={25} />} iconPosition="top" />
@@ -117,44 +117,51 @@ export default function ChatsList() {
 
         {[0, 1, 2, 3].map((tabIndex) => (
           <CustomTabPanel key={tabIndex} value={value} index={tabIndex}>
-            <motion.div variants={itemVariants}>
-              <ZichatNewsPinned handleGetChatData={handleGetChatData} />
-              {mock
-                .filter((chat) => chat.type === tabTypes[tabIndex])
-                .map((chat, index) => (
-                  <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
-                    <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.id)}>
-                      <Box component="img" src={chat.avatar} alt={chat.name} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
-                      <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
-                          <Typography variant="h6" color="text.primary" fontWeight={900}>
-                            {chat.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.primary">
-                            {ConvertToPersianDigit(chat.timestamp)}
-                          </Typography>
-                        </Box>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
-                          <Typography variant="body1" color="text.secondary" noWrap>
-                            {chat.lastMessage}
-                          </Typography>
-                          {chat.unreadCount > 0 && (
-                            <Box mt={0.5} bgcolor="secondary.main" color="black" px={1} borderRadius="12px" fontSize="1em" display="inline-block">
-                              {ConvertToPersianDigit(chat.unreadCount)}
-                            </Box>
-                          )}
+            <Box sx={{ ...fade_content, maxHeight: '45vh', overflowY: 'hidden' }}>
+              <motion.div variants={itemVariants}>
+                <ZichatNewsPinned handleGetChatData={handleGetChatData} />
+                {mock
+                  .filter((chat) => chat.type === tabTypes[tabIndex])
+                  .map((chat, index) => (
+                    <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
+                      <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.id)}>
+                        <Box component="img" src={chat.avatar} alt={chat.name} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
+                        <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
+                          <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
+                            <Typography variant="h6" color="text.primary" fontWeight={900}>
+                              {chat.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.primary">
+                              {ConvertToPersianDigit(chat.timestamp)}
+                            </Typography>
+                          </Box>
+                          <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
+                            <Typography variant="body1" color="text.secondary" noWrap>
+                              {chat.lastMessage}
+                            </Typography>
+                            {chat.unreadCount > 0 && (
+                              <Box mt={0.5} bgcolor="secondary.main" color="black" px={1} borderRadius="12px" fontSize="1em" display="inline-block">
+                                {ConvertToPersianDigit(chat.unreadCount)}
+                              </Box>
+                            )}
+                          </Box>
                         </Box>
                       </Box>
                     </Box>
-                  </Box>
-                ))}
-            </motion.div>
+                  ))}
+              </motion.div>
+            </Box>
           </CustomTabPanel>
         ))}
       </Box>
     </Box>
   );
 }
+
+const fade_content = {
+  maskImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 100%)',
+  overflow: 'auto',
+};
 
 const styles = {
   chats_container: {
