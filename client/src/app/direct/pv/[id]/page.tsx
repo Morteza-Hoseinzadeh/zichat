@@ -24,7 +24,7 @@ const mock = [
     id: 1,
     type: 'user',
     chat_type: 'PV',
-    name: 'سینا شکوری',
+    name: ' حسین زاده',
     date: '15 فروردین 1404',
     unreadCount: 2,
     avatar: '/assets/avatars/avatar.jpg',
@@ -78,7 +78,7 @@ function Header({ onClose }: { onClose: () => void }) {
         <img src="/assets/avatars/avatar.jpg" alt="avatar" width={65} height={65} />
         <Box>
           <Typography variant="h6" fontWeight={900} color="text.primary">
-            محمد رفعتی
+            حسین زاده
           </Typography>
           <Box display="flex" alignItems="center" gap={0.5}>
             <Box sx={{ backgroundColor: status.color, width: 12, height: 12, borderRadius: '50%' }} />

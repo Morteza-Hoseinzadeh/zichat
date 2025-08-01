@@ -110,7 +110,7 @@ const MobileView = ({ theme }: { theme: Theme }) => (
         </Typography>
       </Box>
       <Box display={'flex'} alignItems={'center'} gap={1}>
-        <GlitchText text="خوش آمدید به زیچت💜" />
+        <GlitchText text="خوش اومدی به زیچت مرتضی💜" />
       </Box>
     </Box>
     <Box sx={{ backgroundColor: theme.palette.background.paper, width: '100%', padding: '10px 0', textAlign: 'center', marginY: '12px', borderRadius: '8px' }}>

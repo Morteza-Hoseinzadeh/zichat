@@ -28,7 +28,7 @@ export default function UserInfoHeader() {
             </Typography>
           </Box>
           <Typography color="text.primary" variant="h5" fontWeight={900}>
-            مهدی محمدی
+            مزتضی حسین زاده
           </Typography>
         </Box>
       </Box>
