@@ -15,7 +15,7 @@ import UserInfoHeader from '@/components/home/user-info-header/userInfoHeader';
 import ChatsList from '@/components/home/chats-list/chatsList';
 import Menu from '@/components/home/menu/menu';
 import AnimatedMotion from '@/components/AnimatedMotion';
-import News from '@/components/home/news/news';
+import CryptoDashboard from '@/components/home/CryptoDashboard/CryptoDashboard';
 
 // Variants
 const containerVariants: any = {
@@ -36,7 +36,7 @@ export default function Page() {
         </AnimatedMotion>
 
         <AnimatedMotion>
-          <News />
+          <CryptoDashboard />
         </AnimatedMotion>
 
         <AnimatedMotion>
