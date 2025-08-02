@@ -92,15 +92,7 @@ export default function ChatsList() {
   };
 
   return (
-    <Box my={6}>
-      <Box display={'flex'} alignItems="center" justifyContent={'space-between'} mb={2}>
-        <Typography variant="h4" color="text.primary" fontWeight={100}>
-          📁 لیست چت ها
-        </Typography>
-        <Button variant="text" sx={{ fontSize: 18, color: 'pirmary.main' }}>
-          نمایش
-        </Button>
-      </Box>
+    <Box my={2}>
       <Box sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: '100%' }}>
         <Box sx={{ width: '100%', mb: 2 }}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="fullWidth" centered textColor="primary" indicatorColor="primary">

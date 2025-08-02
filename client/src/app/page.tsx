@@ -28,9 +28,6 @@ export default function Page() {
           <SideBar />
         </AnimatedMotion>
         <AnimatedMotion>
-          <UserInfoHeader />
-        </AnimatedMotion>
-        <AnimatedMotion>
           <Home />
         </AnimatedMotion>
       </motion.div>

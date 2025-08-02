@@ -5,34 +5,38 @@ import { Box, Button, Typography } from '@mui/material';
 import { navItems } from '@/utils/data/data';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import WelcomeCard from './WellcomeCard';
 
 export default function Home() {
   const router = useRouter();
 
   return (
-    <Box sx={styles.mainContainer}>
-      <Typography align="center" mb={4} variant="h4" sx={styles.title}>
-        دسترسی سریع به خدمات
-      </Typography>
+    <>
+      <WelcomeCard userName={'Morteza'} />
+      <Box sx={styles.mainContainer}>
+        <Typography align="center" mb={4} variant="h4" sx={styles.title}>
+          دسترسی سریع به خدمات
+        </Typography>
 
-      <Box sx={styles.gridContainer}>
-        {navItems.slice(1).map((item, index) => (
-          <motion.div key={index} whileHover={{ y: -8, scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 10 }}>
-            <Box sx={styles.card} onClick={() => router.push(item.id)}>
-              <Box sx={styles.cardContent}>
-                <Typography variant="h2" sx={styles.emoji}>
-                  {item.emoji.toString()}
-                </Typography>
-                <Typography variant="h6" sx={styles.label}>
-                  {item.fa_label}
-                </Typography>
+        <Box sx={styles.gridContainer}>
+          {navItems.slice(1).map((item, index) => (
+            <motion.div key={index} whileHover={{ y: -8, scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 10 }}>
+              <Box sx={styles.card} onClick={() => router.push(item.id)}>
+                <Box sx={styles.cardContent}>
+                  <Typography variant="h2" sx={styles.emoji}>
+                    {item.emoji.toString()}
+                  </Typography>
+                  <Typography variant="h6" sx={styles.label}>
+                    {item.fa_label}
+                  </Typography>
+                </Box>
+                <Box sx={styles.hoverIndicator} />
               </Box>
-              <Box sx={styles.hoverIndicator} />
-            </Box>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 }
 
@@ -124,5 +128,33 @@ const styles = {
     '.MuiBox-root:hover &': {
       transform: 'scaleX(1)',
     },
+  },
+  statsContainer: {
+    display: 'grid',
+    gridTemplateColumns: {
+      xs: 'repeat(2, 1fr)',
+      sm: 'repeat(3, 1fr)',
+      md: 'repeat(4, 1fr)',
+    },
+    gap: 3,
+    mb: 4,
+  },
+  statCard: {
+    backgroundColor: 'background.paper',
+    borderRadius: 2,
+    p: 3,
+    boxShadow: 1,
+    transition: 'transform 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-5px)',
+    },
+  },
+  statTitle: {
+    color: 'text.secondary',
+    mb: 1,
+  },
+  statValue: {
+    fontWeight: 700,
+    color: 'text.primary',
   },
 };

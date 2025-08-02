@@ -234,7 +234,7 @@ export default function CryptoDashboard() {
 
   return (
     <>
-      <Box my={6}>
+      <Box my={4}>
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
           <Typography variant="h4" color="text.primary" fontWeight={100}>
             نرخ کریپتو💸

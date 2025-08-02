@@ -10,7 +10,7 @@ import ChatsList from '@/components/routes/Chats/chats-list/chatsList';
 import { motion } from 'framer-motion';
 import AnimatedMotion from '@/components/AnimatedMotion';
 import SideBar from '@/components/UI/sidebar/sidebar';
-import UserInfoHeader from '@/components/routes/Chats/user-info-header/userInfoHeader';
+import CryptoDashboard from '@/components/routes/News/CryptoDashboard/CryptoDashboard';
 
 const containerVariants: any = {
   hidden: { opacity: 0 },
@@ -24,10 +24,7 @@ export default function page() {
         <SideBar />
       </AnimatedMotion>
       <AnimatedMotion>
-        <UserInfoHeader />
-      </AnimatedMotion>
-      <AnimatedMotion>
-        <ChatsList />
+        <CryptoDashboard />
       </AnimatedMotion>
       <motion.div variants={containerVariants} initial="hidden" animate="show">
         <CurvedBottomNavigation />
