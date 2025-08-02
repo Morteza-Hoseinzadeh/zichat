@@ -8,7 +8,7 @@ import { Box, Button, Grid2, IconButton, Typography, useTheme } from '@mui/mater
 // Icons
 import { MdOutlineAttachMoney } from 'react-icons/md';
 import { TiArrowSortedDown, TiArrowSortedUp } from 'react-icons/ti';
-import { TbCircleDashed, TbDragDrop2, TbSettings, TbTrash } from 'react-icons/tb';
+import { TbCircleDashed, TbDragDrop2, TbExchange, TbTrash } from 'react-icons/tb';
 
 // Drag & Drop imports
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -240,7 +240,7 @@ export default function CryptoDashboard() {
             نرخ کریپتو💸
           </Typography>
           <IconButton size="small" sx={{ color: 'primary.main' }} onClick={() => setOpenModal(true)}>
-            <TbSettings size={32} />
+            <TbExchange size={32} />
           </IconButton>
         </Box>
 
