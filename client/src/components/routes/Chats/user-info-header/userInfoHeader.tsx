@@ -4,16 +4,10 @@ import React from 'react';
 import { Avatar, Box, IconButton, Typography } from '@mui/material';
 
 // Icons
-import { TbSun, TbMoon, TbSettings } from 'react-icons/tb';
-import { IoClose } from 'react-icons/io5';
-
-// Utils
-import { useThemeMode } from '@/utils/hooks/useThemeMode';
+import { TbUserCircle } from 'react-icons/tb';
 
 export default function UserInfoHeader() {
   const [isSettingOpen, setIsSettingOpen] = React.useState(false);
-
-  const { toggleTheme, isDarkMode } = useThemeMode();
 
   return (
     <Box mb={4} mt={2} display={'flex'} justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: 2, borderColor: 'primary.main' }}>
@@ -33,12 +27,8 @@ export default function UserInfoHeader() {
         </Box>
       </Box>
       <Box display={'flex'} alignItems="center" gap={1}>
-        <IconButton sx={{ backgroundColor: 'primary.main', color: '#f2f2f2', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={toggleTheme}>
-          {isDarkMode ? <TbSun /> : <TbMoon />}
-        </IconButton>
-
-        <IconButton sx={{ backgroundColor: 'primary.main', color: '#f2f2f2', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => setIsSettingOpen(!isSettingOpen)}>
-          {isSettingOpen ? <IoClose /> : <TbSettings />}
+        <IconButton sx={{ color: 'primary.main', '&:hover': { color: 'primary.dark' } }} onClick={() => setIsSettingOpen(!isSettingOpen)}>
+          <TbUserCircle size={34} />
         </IconButton>
       </Box>
     </Box>
