@@ -9,8 +9,10 @@ import { Box } from '@mui/material';
 import { motion } from 'framer-motion';
 
 // Components
-import SideBar from '@/components/UI/sidebar/sidebar';
 import AnimatedMotion from '@/components/AnimatedMotion';
+import SideBar from '@/components/UI/sidebar/sidebar';
+import Home from '@/components/routes/home/Home';
+import UserInfoHeader from '@/components/routes/Chats/user-info-header/userInfoHeader';
 
 // Variants
 const containerVariants: any = {
@@ -24,6 +26,12 @@ export default function Page() {
       <motion.div variants={containerVariants} initial="hidden" animate="show">
         <AnimatedMotion>
           <SideBar />
+        </AnimatedMotion>
+        <AnimatedMotion>
+          <UserInfoHeader />
+        </AnimatedMotion>
+        <AnimatedMotion>
+          <Home />
         </AnimatedMotion>
       </motion.div>
     </Box>
