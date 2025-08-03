@@ -6,7 +6,7 @@ const next = require('next');
 const http = require('http');
 
 // Import both the router and WebSocket creator from your route file
-const { router: apiRoutes } = require('./app/route');
+const { router: apiRoutes } = require('./server/app/route');
 
 const PORT = process.env.PORT || 5000;
 const dev = process.env.NODE_ENV !== 'production';
