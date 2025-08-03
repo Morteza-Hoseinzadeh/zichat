@@ -1,6 +1,8 @@
 from flask import Flask
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Use absolute imports starting from your project root
 from routes.web import web_routes
