@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 // User side routes
-// const test = require('');
+const crypto_file = require('./routes/cryptoes/route');
 
 // Client side routes
-// router.use('/as', test);
+router.use('/crypto/prices', crypto_file);
 
 module.exports = { router };

@@ -30,10 +30,14 @@ app.use('/api', apiRoutes);
 nextApp
   .prepare()
   .then(() => {
-    const routes = ['/'];
+    const routes = ['/', '/direct', '/crypto'];
 
     routes.forEach((route) => {
       app.get(route, (req, res) => nextApp.render(req, res, route, req.query));
+    });
+
+    app.get('/direct/pv/:id', (req, res) => {
+      return nextApp.render(req, res, `/direct/pv/${req.params.id}`, req.query);
     });
 
     // Handle all other routes with Next.js
@@ -47,7 +51,7 @@ nextApp
     // Start server
     server.listen(PORT, (err) => {
       if (err) throw err;
-      console.log(`> Server ready`);
+      console.log(`> Server ready on ${PORT}`);
     });
   })
   .catch((err) => {
