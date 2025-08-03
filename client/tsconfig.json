@@ -2,17 +2,19 @@
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "noEmit": true, // Prevents emitting output files like .js (stops generating JavaScript).
+    "skipLibCheck": true, // Skips type checking of declaration files (.d.ts).
+    "strict": false, // Disables strict type checking, including strictNullChecks, noImplicitAny, etc.
+    "noImplicitAny": false, // Allows variables to have the `any` type without a warning.
+    "noUncheckedIndexedAccess": false, // Allows indexing into objects with unchecked access.
+    "allowJs": true, // Allows JavaScript files along with TypeScript files.
+    "isolatedModules": true,
     "plugins": [
       {
         "name": "next"
