@@ -22,6 +22,7 @@ import CustomDialog from '@/components/custom/CustomDialog';
 // Utils
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 import AnimatedMotion from '@/components/AnimatedMotion';
+import axiosInstance from '@/utils/hooks/axiosInstance';
 
 const CoinsCardSection = ({ item, isShowDragAnDropButton, handleRemoveCoin }: any) => {
   const theme = useTheme();
@@ -116,10 +117,11 @@ export default function CryptoDashboard({ data, refetch, loading }: any) {
     }
   };
 
-  const handleOnChangeCoin = (symbol: string) => {
+  const handleOnChangeCoin = async (symbol: string) => {
     setCoins((prev) => {
       return prev.map((coin) => (coin.symbol === symbol ? { ...coin, selected_coin: !coin.selected_coin } : coin));
     });
+    return await axiosInstance.put(`/api/crypto/${symbol.toUpperCase()}/update`);
   };
 
   const handleRemoveCoin = (e: any, symbol: any) => {
