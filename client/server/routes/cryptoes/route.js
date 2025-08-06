@@ -3,7 +3,7 @@ const axios = require('axios');
 const router = express.Router();
 const connection = require('../../models/dbConnection');
 
-router.get('/all', async (req, res) => {
+router.get('/prices/all', async (req, res) => {
   try {
     const [nobitexData, dbData] = await Promise.all([
       axios.get('https://apiv2.nobitex.ir/v3/orderbook/all'),
@@ -41,6 +41,31 @@ router.get('/all', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'خطا در دریافت یا پردازش اطلاعات' });
+  }
+});
+
+router.put('/:symbol/update', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const upperSymbol = symbol.toUpperCase();
+
+    const query = `
+      UPDATE zichat.cryptoes
+      SET selected_coin = NOT selected_coin
+      WHERE symbol = ?
+    `;
+
+    connection.query(query, [upperSymbol], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ type: 'error', data: 'خطا در اجرای کوئری' });
+      }
+
+      return res.json({ type: 'success', data: result });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ type: 'error', data: 'خطا در ارتباط با سرور' });
   }
 });
 
