@@ -69,4 +69,14 @@ router.put('/:symbol/update', async (req, res) => {
   }
 });
 
+router.get('/:symbol/chart', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const response = axios.get(`https://apiv2.nobitex.ir/v2/depth/${symbol.toUpperCase()}`);
+    res.json((await response).data);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 module.exports = router;
