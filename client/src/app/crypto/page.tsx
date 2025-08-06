@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box } from '@mui/material';
 
 import { motion } from 'framer-motion';
@@ -19,6 +19,13 @@ const containerVariants: any = {
 
 export default function page() {
   const { data, refetch, loading } = useGet('/api/crypto/prices/all');
+  const getCryptoesData = useMemo(() => data || [], [data]);
+
+  const [coins, setCoins] = useState<any[]>([]);
+
+  useEffect(() => {
+    setCoins(getCryptoesData);
+  }, [getCryptoesData]);
 
   return (
     <Box position="relative">
@@ -26,10 +33,10 @@ export default function page() {
         <SideBar />
       </AnimatedMotion>
       <AnimatedMotion>
-        <CryptoDashboard data={data} refetch={refetch} loading={loading} />
+        <CryptoDashboard coins={coins} setCoins={setCoins} getCryptoesData={getCryptoesData} refetch={refetch} loading={loading} />
       </AnimatedMotion>
       <AnimatedMotion>
-        <ApexChart data={data} refetch={refetch} loading={loading} />
+        <ApexChart coins={coins} refetch={refetch} loading={loading} />
       </AnimatedMotion>
       <motion.div variants={containerVariants} initial="hidden" animate="show">
         <CurvedBottomNavigation />

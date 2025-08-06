@@ -56,19 +56,12 @@ const CoinsCardSection = ({ item, isShowDragAnDropButton, handleRemoveCoin }: an
   );
 };
 
-export default function CryptoDashboard({ data, refetch, loading }: any) {
-  const getCryptoesData = useMemo(() => data || [], [data]);
-
+export default function CryptoDashboard({ refetch, loading, coins, setCoins, getCryptoesData }: any) {
   const theme = useTheme();
   const [openModal, setOpenModal] = useState(false);
-  const [coins, setCoins] = useState<any[]>([]);
   const [checkCoinsPrice, setCheckCoinsPrice] = useState<any[]>([]);
 
   const [isShowDragAnDropButton, setIsShowDragAnDropButton] = useState(false);
-
-  useEffect(() => {
-    setCoins(getCryptoesData);
-  }, [getCryptoesData]);
 
   useEffect(() => {
     const refetchInterval = setInterval(() => {
