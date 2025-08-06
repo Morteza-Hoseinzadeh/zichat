@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 // Dynamically import ApexChart to disable SSR
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-const ApexChart = () => {
+const ApexChart = ({ data, refetch, loading }: any) => {
   const theme = useTheme();
 
   const [selectedCoin, setSelectedCoin] = useState<any>('bitcoin');

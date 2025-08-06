@@ -10,6 +10,7 @@ import AnimatedMotion from '@/components/AnimatedMotion';
 import SideBar from '@/components/UI/sidebar/sidebar';
 import CryptoDashboard from '@/components/routes/News/CryptoDashboard';
 import ApexChart from '@/components/routes/News/ApexChart';
+import useGet from '@/utils/hooks/API/useGet';
 
 const containerVariants: any = {
   hidden: { opacity: 0 },
@@ -17,16 +18,18 @@ const containerVariants: any = {
 };
 
 export default function page() {
+  const { data, refetch, loading } = useGet('/api/crypto/prices/all');
+
   return (
     <Box position="relative">
       <AnimatedMotion>
         <SideBar />
       </AnimatedMotion>
       <AnimatedMotion>
-        <CryptoDashboard />
+        <CryptoDashboard data={data} refetch={refetch} loading={loading} />
       </AnimatedMotion>
       <AnimatedMotion>
-        <ApexChart />
+        <ApexChart data={data} refetch={refetch} loading={loading} />
       </AnimatedMotion>
       <motion.div variants={containerVariants} initial="hidden" animate="show">
         <CurvedBottomNavigation />

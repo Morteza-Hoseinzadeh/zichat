@@ -29,7 +29,7 @@ router.get('/all', async (req, res) => {
           persian_name: dbRow?.persian_name || '',
           image_file: dbRow?.image_file || '',
           selected_coin: dbRow?.selected_coin || false,
-          price: info.last || '',
+          price: info.lastTradePrice || '',
           signals: {
             bids: info.bids || [],
             asks: info.asks || [],
