@@ -116,7 +116,7 @@ export default function ChatsList() {
   };
 
   return (
-    <Box my={2}>
+    <Box mb={14} mt={2}>
       <Box sx={{ backgroundColor: 'background.paper', borderRadius: '12px', textAlign: 'center', width: '100%' }}>
         <Box sx={{ width: '100%', mb: 2 }}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="fullWidth" centered textColor="primary" indicatorColor="primary">
