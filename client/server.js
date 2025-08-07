@@ -9,6 +9,8 @@ const http = require('http');
 
 const { router: apiRoutes } = require('./server/route');
 
+const { Server } = require('socket.io');
+
 const PORT = process.env.PORT || 5000;
 const dev = process.env.NODE_ENV !== 'production';
 
@@ -23,36 +25,22 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const setupSocket = require('./server/utils/socket/socket');
+
+const io = new Server(server, {
+  cors: {
+    origin: process.env.BASE_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+});
+const socketMap = setupSocket(io);
+
+app.set('io', io);
+app.set('socketMap', socketMap);
+
 // API Routes
 app.use('/api', apiRoutes);
-
-// nextApp
-//   .prepare()
-//   .then(() => {
-//     // Optional: define static routes
-//     const routes = ['/', '/direct', '/crypto'];
-//     routes.forEach((route) => {
-//       app.get(route, (req, res) => nextApp.render(req, res, route, req.query));
-//     });
-
-//     app.get('/direct/pv/:id', (req, res) =>
-//       nextApp.render(req, res, '/direct/pv/[id]', {
-//         ...req.query,
-//         id: req.params.id,
-//       })
-//     );
-
-//     // Handle everything else
-//     app.all('*', (req, res) => handle(req, res));
-
-//     server.listen(PORT, () => {
-//       console.log(`🚀 Server ready on http://localhost:${PORT}`);
-//     });
-//   })
-//   .catch((err) => {
-//     console.error('❌ Next.js preparation failed:', err);
-//     process.exit(1);
-//   });
 
 server.listen(PORT, (err) => {
   if (err) throw err;
