@@ -1,68 +1,110 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, useTheme, Typography } from '@mui/material';
+import { Box, useTheme, Typography, useMediaQuery } from '@mui/material';
 import dynamic from 'next/dynamic';
 import dayjs from 'dayjs';
+import useGet from '@/utils/hooks/API/useGet';
 
 // Dynamically import ApexChart to disable SSR
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-const ApexChart = ({ coins, refetch, loading }: any) => {
-  const theme = useTheme();
+// Helper: round date to nearest interval seconds
+function roundToNearestInterval(date: Date, intervalSeconds: number) {
+  const ms = date.getTime();
+  const rounded = Math.floor(ms / (intervalSeconds * 1000)) * intervalSeconds * 1000;
+  return new Date(rounded);
+}
 
-  const [selectedCoin, setSelectedCoin] = useState<any>('bitcoin');
+const ApexChart = ({ coins }: any) => {
+  const theme = useTheme();
+  const isMdDown = useMediaQuery(theme.breakpoints.down('md'));
+
+  const [selectedCoin, setSelectedCoin] = useState<string>('USDTIRT');
   const [state, setState] = useState<any>({
     series: [],
-    options: getChartOptions('bitcoin'),
+    options: getChartOptions('USDTIRT'),
   });
 
-  // Sample coin data
-  const coinData: any = {
-    bitcoin: [
-      { x: new Date(1538778600000), y: [6629.81, 6650.5, 6623.04, 6633.33] },
-      { x: new Date(1538780400000), y: [6632.01, 6643.59, 6620, 6630.11] },
-      { x: new Date(1538782200000), y: [6630.71, 6648.95, 6623.34, 6635.65] },
-      { x: new Date(1538784000000), y: [6635.65, 6651, 6629.67, 6638.24] },
-    ],
-    ethereum: [
-      { x: new Date(1538778600000), y: [320.15, 325.5, 318.04, 322.33] },
-      { x: new Date(1538780400000), y: [322.01, 328.59, 320.0, 325.11] },
-      { x: new Date(1538782200000), y: [325.11, 330.5, 324.0, 328.75] },
-      { x: new Date(1538784000000), y: [328.75, 335.0, 327.5, 332.4] },
-    ],
-    solana: [
-      { x: new Date(1538778600000), y: [45.81, 47.5, 44.04, 46.33] },
-      { x: new Date(1538780400000), y: [46.01, 48.59, 45.0, 47.11] },
-      { x: new Date(1538782200000), y: [47.11, 49.25, 46.5, 48.75] },
-      { x: new Date(1538784000000), y: [48.75, 50.0, 47.8, 49.2] },
-    ],
-  };
+  const [candlesHistory, setCandlesHistory] = useState<any[]>([]);
 
+  const { data, refetch } = useGet(`/api/crypto/${selectedCoin}/chart`);
+
+  // Refetch chart data every 3 seconds
   useEffect(() => {
-    if (selectedCoin && coinData[selectedCoin]) {
-      setState((prev: any) => ({
-        ...prev,
-        series: [{ name: selectedCoin.toUpperCase(), data: coinData[selectedCoin] }],
-        options: getChartOptions(selectedCoin),
-      }));
-    }
+    const intervalId = setInterval(() => {
+      refetch();
+    }, 3000);
+    return () => clearInterval(intervalId);
   }, [selectedCoin]);
 
+  useEffect(() => {
+    setCandlesHistory([]);
+    refetch(); // Fetch immediately for the new coin
+  }, [selectedCoin]);
+
+  // Transform API bids/asks into candlestick data
+  function generateNewCandle(data: any, prevClose: number | null) {
+    if (!data || !data.bids || !data.asks) return null;
+
+    const bidPrice = data.bids[0] ? parseFloat(data.bids[0][0]) : null;
+    const askPrice = data.asks[0] ? parseFloat(data.asks[0][0]) : null;
+    if (bidPrice === null || askPrice === null) return null;
+
+    const currentPrice = (bidPrice + askPrice) / 2;
+    const open = prevClose !== null ? prevClose : currentPrice;
+    const close = currentPrice;
+    const high = Math.max(open, close) * 1.002;
+    const low = Math.min(open, close) * 0.998;
+
+    // Determine candle time - fixed 3s interval after last candle or rounded now
+    const intervalMs = 3000; // 3 seconds
+    const lastCandle = candlesHistory[candlesHistory.length - 1];
+    const newTime = lastCandle ? new Date(lastCandle.x.getTime() + intervalMs) : roundToNearestInterval(new Date(), 3);
+
+    return {
+      x: newTime,
+      y: [open, high, low, close],
+    };
+  }
+
+  // When API data changes, update chart series
+  useEffect(() => {
+    if (!data) return;
+
+    const bidPrice = data.bids?.[0] ? parseFloat(data.bids[0][0]) : null;
+    const askPrice = data.asks?.[0] ? parseFloat(data.asks[0][0]) : null;
+    if (bidPrice === null || askPrice === null) return;
+
+    const currentPrice = (bidPrice + askPrice) / 2;
+
+    const lastCandle = candlesHistory[candlesHistory.length - 1];
+    const prevClose = lastCandle ? lastCandle.y[3] : null;
+
+    // Only add candle if price changed (rounded to 2 decimals to avoid tiny float diffs)
+    if (prevClose !== null && currentPrice.toFixed(2) === prevClose.toFixed(2)) return;
+
+    const newCandle = generateNewCandle(data, prevClose);
+    if (!newCandle) return;
+
+    const newHistory = [...candlesHistory, newCandle].slice(-15);
+    setCandlesHistory(newHistory);
+
+    setState({
+      series: [{ name: selectedCoin.toUpperCase(), data: newHistory }],
+      options: getChartOptions(selectedCoin),
+    });
+  }, [data]);
+
+  // Chart options (same as before)
   function getChartOptions(coin: string) {
     return {
       chart: {
         type: 'candlestick',
-        height: 350,
-        toolbar: {
-          show: false,
-        },
+        height: 300,
+        toolbar: { show: false },
         fontFamily: 'YekanBakh, sans-serif',
-        animations: {
-          enabled: true,
-          easing: 'easeinout',
-          speed: 800,
-        },
+        animations: { enabled: true, easing: 'easeinout', speed: 800 },
       },
       title: {
         text: `نمودار ${coin}`,
@@ -77,47 +119,25 @@ const ApexChart = ({ coins, refetch, loading }: any) => {
       xaxis: {
         type: 'datetime',
         labels: {
-          style: {
-            colors: theme.palette.text.secondary,
-            fontFamily: 'YekanBakh',
-          },
-          formatter: function (val: any) {
-            return dayjs(val).format('MMM DD HH:mm');
-          },
+          style: { colors: theme.palette.text.secondary, fontFamily: 'YekanBakh' },
+          formatter: (val: any) => dayjs(val).format('MMM DD HH:mm'),
         },
-        axisBorder: {
-          show: true,
-          color: theme.palette.divider,
-        },
-        axisTicks: {
-          show: true,
-          color: theme.palette.divider,
-        },
-        tooltip: {
-          enabled: false,
-        },
+        axisBorder: { show: true, color: theme.palette.divider },
+        axisTicks: { show: true, color: theme.palette.divider },
+        tooltip: { enabled: false },
       },
       yaxis: {
         labels: {
-          style: {
-            colors: theme.palette.text.secondary,
-            fontFamily: 'YekanBakh',
-          },
-          formatter: function (val: number) {
-            return val.toFixed(2);
-          },
+          style: { colors: theme.palette.text.secondary, fontFamily: 'YekanBakh' },
+          formatter: (val: number) => val.toFixed(2),
         },
         opposite: true,
       },
       tooltip: {
         enabled: true,
-        style: {
-          fontFamily: 'YekanBakh',
-        },
+        style: { fontFamily: 'YekanBakh' },
         x: {
-          formatter: function (val: any) {
-            return dayjs(val).format('YYYY/MM/DD HH:mm');
-          },
+          formatter: (val: any) => dayjs(val).format('YYYY/MM/DD HH:mm'),
         },
       },
       plotOptions: {
@@ -126,35 +146,16 @@ const ApexChart = ({ coins, refetch, loading }: any) => {
             upward: theme.palette.success.main,
             downward: theme.palette.error.main,
           },
-          wick: {
-            useFillColor: true,
-          },
+          wick: { useFillColor: true },
         },
       },
       grid: {
         borderColor: theme.palette.divider,
         strokeDashArray: 4,
-        xaxis: {
-          lines: {
-            show: true,
-          },
-        },
-        yaxis: {
-          lines: {
-            show: true,
-          },
-        },
+        xaxis: { lines: { show: true } },
+        yaxis: { lines: { show: true } },
       },
-      responsive: [
-        {
-          breakpoint: 600,
-          options: {
-            chart: {
-              height: 300,
-            },
-          },
-        },
-      ],
+      responsive: [{ breakpoint: 600, options: { chart: { height: 300 } } }],
     };
   }
 
@@ -165,7 +166,7 @@ const ApexChart = ({ coins, refetch, loading }: any) => {
           نمودار قیمت ارزهای دیجیتال
         </Typography>
 
-        <Box sx={{ minWidth: 200, position: 'relative', '&:after': { content: '"▼"', position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: theme.palette.text.secondary, pointerEvents: 'none' } }}>
+        <Box sx={{ minWidth: 200, position: 'relative' }}>
           <select
             value={selectedCoin}
             onChange={(e) => setSelectedCoin(e.target.value)}
@@ -177,17 +178,14 @@ const ApexChart = ({ coins, refetch, loading }: any) => {
               backgroundColor: theme.palette.background.default,
               color: theme.palette.text.primary,
               fontSize: '1rem',
-              fontFamily: 'YekanBakh',
-              appearance: 'none',
               cursor: 'pointer',
-              outline: 'none',
               transition: 'all 0.2s',
             }}
           >
             {coins.map(
-              (item) =>
+              (item: any) =>
                 item.selected_coin && (
-                  <option value={item.symbol}>
+                  <option key={item.symbol} value={item.symbol}>
                     {item.persian_name} ({item.english_name})
                   </option>
                 )

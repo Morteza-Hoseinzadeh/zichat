@@ -56,7 +56,7 @@ const CoinsCardSection = ({ item, isShowDragAnDropButton, handleRemoveCoin }: an
   );
 };
 
-export default function CryptoDashboard({ refetch, loading, coins, setCoins, getCryptoesData }: any) {
+export default function CryptoDashboard({ refetch, coins, setCoins }: any) {
   const theme = useTheme();
   const [openModal, setOpenModal] = useState(false);
   const [checkCoinsPrice, setCheckCoinsPrice] = useState<any[]>([]);
@@ -69,7 +69,7 @@ export default function CryptoDashboard({ refetch, loading, coins, setCoins, get
     }, 15000);
 
     const snapshotInterval = setInterval(() => {
-      setCheckCoinsPrice(getCryptoesData);
+      setCheckCoinsPrice(coins);
     }, 20000);
 
     return () => {
@@ -137,121 +137,107 @@ export default function CryptoDashboard({ refetch, loading, coins, setCoins, get
         </Box>
 
         <Grid2 container spacing={1} textAlign="center">
-          {loading
-            ? Array.from({ length: 6 }).map((_, index) => (
-                <Grid2 key={index} size={{ xs: 6, md: 4, lg: 3, xl: 2 }} sx={{ borderRadius: '12px' }}>
-                  <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
-                    <Skeleton variant="circular" width={45} height={45} sx={{ mx: 'auto', mb: 1 }} />
-                    <Skeleton variant="text" width="60%" sx={{ mx: 'auto', mb: 1 }} />
-                    <Skeleton variant="rectangular" width="100%" height={40} sx={{ borderRadius: '8px' }} />
+          {coins
+            .filter((coin) => coin.selected_coin)
+            .map((item) => {
+              const diff = handleCheckDiffPrice(item.symbol, item.price);
+              const isUp = diff > 0;
+              const isDown = diff < 0;
+              return (
+                <Grid2 key={item.symbol} size={{ xs: 6, md: 4, lg: 3, xl: 2 }}>
+                  <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center', p: 2, gap: 1, bgcolor: 'background.paper', borderRadius: '12px' }}>
+                    <img src={`/assets/cryptos-icon/${item.image_file}.png`} alt={item.persian_name} width={45} />
+                    <Typography variant="h6" fontWeight={900} color="text.primary" gutterBottom>
+                      {item.persian_name}
+                    </Typography>
+                    <Box width="100%" display="flex" alignItems="center" flexDirection="column" justifyContent={'center'} gap={1} color="text.primary">
+                      {/* <Box display="flex" alignItems="center" color={isUp ? 'success.main' : isDown ? 'error.main' : 'text.primary'}>
+                        {isUp && <TiArrowSortedUp />}
+                        {isDown && <TiArrowSortedDown />}
+                        <Typography variant="body1">{ConvertToPersianDigit(Math.abs(diff).toFixed(2))} %</Typography>
+                      </Box> */}
+                      <Box display="flex" alignItems="center">
+                        <Typography variant="h6">{ConvertToPersianDigit(item?.price)}</Typography>
+                        <MdOutlineAttachMoney size={22} />
+                      </Box>
+                    </Box>
                   </Box>
                 </Grid2>
-              ))
-            : coins
-                .filter((coin) => coin.selected_coin)
-                .map((item, index) => {
-                  const priceDiff = handleCheckDiffPrice(item.symbol, item.price);
-
-                  return (
-                    <Grid2 key={item.symbol} size={{ xs: 6, md: 4, lg: 3, xl: 2 }}>
-                      <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center', p: 2, gap: 1, bgcolor: 'background.paper', borderRadius: '12px' }}>
-                        <img src={`/assets/cryptos-icon/${item.image_file}.png`} alt={item.persian_name} width={45} />
-                        <Typography variant="h6" fontWeight={900} color="text.primary" gutterBottom>
-                          {item.persian_name}
-                        </Typography>
-                        <Box width="100%" display="flex" alignItems="center" flexDirection="column" justifyContent={'center'} gap={1} color="text.primary">
-                          <Box display="flex" alignItems="center" color={priceDiff > 0 ? 'success.main' : priceDiff < 0 ? 'error.main' : 'text.primary'}>
-                            {priceDiff > 0 ? <TiArrowSortedUp /> : priceDiff < 0 ? <TiArrowSortedDown /> : null}
-                            <Typography variant="body1">{ConvertToPersianDigit(Math.abs(priceDiff).toFixed(2))} %</Typography>
-                          </Box>
-                          <Box display="flex" alignItems="center">
-                            <Typography variant="h6">{ConvertToPersianDigit(item?.price)}</Typography>
-                            <MdOutlineAttachMoney size={22} />
-                          </Box>
-                        </Box>
-                      </Box>
-                    </Grid2>
-                  );
-                })}
+              );
+            })}
         </Grid2>
       </Box>
 
       {openModal && (
         <CustomDialog open={openModal} onClose={handleClose} maxWidth={'md'} title={'مدیریت ارزها'}>
           <AnimatedMotion>
-            {loading ? (
-              <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
-                <CircularProgress />
+            <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 2 }}>
+                <input type="text" placeholder="جستجوی ارز..." style={{ width: '100%', padding: '12px 16px', borderRadius: '16px', border: `1px solid ${theme.palette.divider}`, backgroundColor: theme.palette.background.default, fontSize: '1rem' }} />
               </Box>
-            ) : (
-              <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 2 }}>
-                  <input type="text" placeholder="جستجوی ارز..." style={{ width: '100%', padding: '12px 16px', borderRadius: '16px', border: `1px solid ${theme.palette.divider}`, backgroundColor: theme.palette.background.default, fontSize: '1rem' }} />
-                </Box>
 
-                {/* Selected Coins Section */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden', flexGrow: 1 }}>
-                  <Box width={'100%'} sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 2, flexShrink: 0 }}>
-                    <Box mb={2} display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
-                        ارزهای انتخاب شده ({ConvertToPersianDigit(coins.filter((c) => c.selected_coin).length)})
-                      </Typography>
-                      <Button variant="text" onClick={() => setIsShowDragAnDropButton(!isShowDragAnDropButton)}>
-                        {isShowDragAnDropButton ? 'بستن' : 'جا به جایی ارز ها'}
-                      </Button>
-                    </Box>
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToParentElement]}>
-                      <SortableContext items={coins.filter((c) => c.selected_coin).map((coin) => coin.symbol)} strategy={verticalListSortingStrategy}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          {coins
-                            .filter((c) => c.selected_coin)
-                            .map((item) =>
-                              isShowDragAnDropButton ? (
-                                <SortableItem key={item.symbol} id={item.symbol}>
-                                  <CoinsCardSection item={item} isShowDragAnDropButton={isShowDragAnDropButton} handleRemoveCoin={handleRemoveCoin} />
-                                </SortableItem>
-                              ) : (
-                                <Box key={item.symbol}>
-                                  <CoinsCardSection item={item} isShowDragAnDropButton={isShowDragAnDropButton} handleRemoveCoin={handleRemoveCoin} />
-                                </Box>
-                              )
-                            )}
-                        </Box>
-                      </SortableContext>
-                    </DndContext>
-                  </Box>
-
-                  {/* Available Coins Section */}
-                  <Box sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 2, flexGrow: 1, overflow: 'auto' }}>
-                    <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: 'text.primary' }}>
-                      سایر ارزهای موجود
+              {/* Selected Coins Section */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden', flexGrow: 1 }}>
+                <Box width={'100%'} sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 2, flexShrink: 0 }}>
+                  <Box mb={2} display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                      ارزهای انتخاب شده ({ConvertToPersianDigit(coins.filter((c) => c.selected_coin).length)})
                     </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      {coins
-                        .filter((c) => !c.selected_coin)
-                        .map((item) => (
-                          <Box key={item.symbol} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, backgroundColor: 'background.default', borderRadius: '16px', border: `1px solid ${theme.palette.divider}`, '&:hover': { backgroundColor: 'action.hover' } }}>
-                            <Box display={'flex'} alignItems={'center'} gap={2}>
-                              <img src={`/assets/cryptos-icon/${item.image_file}.png`} alt={item.persian_name} width={30} />
-                              <Box>
-                                <Typography variant="subtitle1" fontWeight={600}>
-                                  {item.persian_name}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {item.symbol}
-                                </Typography>
+                    <Button variant="text" onClick={() => setIsShowDragAnDropButton(!isShowDragAnDropButton)}>
+                      {isShowDragAnDropButton ? 'بستن' : 'جا به جایی ارز ها'}
+                    </Button>
+                  </Box>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToParentElement]}>
+                    <SortableContext items={coins.filter((c) => c.selected_coin).map((coin) => coin.symbol)} strategy={verticalListSortingStrategy}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {coins
+                          .filter((c) => c.selected_coin)
+                          .map((item) =>
+                            isShowDragAnDropButton ? (
+                              <SortableItem key={item.symbol} id={item.symbol}>
+                                <CoinsCardSection item={item} isShowDragAnDropButton={isShowDragAnDropButton} handleRemoveCoin={handleRemoveCoin} />
+                              </SortableItem>
+                            ) : (
+                              <Box key={item.symbol}>
+                                <CoinsCardSection item={item} isShowDragAnDropButton={isShowDragAnDropButton} handleRemoveCoin={handleRemoveCoin} />
                               </Box>
+                            )
+                          )}
+                      </Box>
+                    </SortableContext>
+                  </DndContext>
+                </Box>
+
+                {/* Available Coins Section */}
+                <Box sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 2, flexGrow: 1, overflow: 'auto' }}>
+                  <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: 'text.primary' }}>
+                    سایر ارزهای موجود
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {coins
+                      .filter((c) => !c.selected_coin)
+                      .map((item) => (
+                        <Box key={item.symbol} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, backgroundColor: 'background.default', borderRadius: '16px', border: `1px solid ${theme.palette.divider}`, '&:hover': { backgroundColor: 'action.hover' } }}>
+                          <Box display={'flex'} alignItems={'center'} gap={2}>
+                            <img src={`/assets/cryptos-icon/${item.image_file}.png`} alt={item.persian_name} width={30} />
+                            <Box>
+                              <Typography variant="subtitle1" fontWeight={600}>
+                                {item.persian_name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {item.symbol}
+                              </Typography>
                             </Box>
-                            <IconButton size="small" sx={{ color: 'primary.main', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleOnChangeCoin(item.symbol)}>
-                              <TbCircleDashed size={22} />
-                            </IconButton>
                           </Box>
-                        ))}
-                    </Box>
+                          <IconButton size="small" sx={{ color: 'primary.main', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleOnChangeCoin(item.symbol)}>
+                            <TbCircleDashed size={22} />
+                          </IconButton>
+                        </Box>
+                      ))}
                   </Box>
                 </Box>
               </Box>
-            )}
+            </Box>
           </AnimatedMotion>
         </CustomDialog>
       )}

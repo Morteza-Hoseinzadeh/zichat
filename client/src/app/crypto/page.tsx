@@ -33,10 +33,10 @@ export default function page() {
         <SideBar />
       </AnimatedMotion>
       <AnimatedMotion>
-        <CryptoDashboard coins={coins} setCoins={setCoins} getCryptoesData={getCryptoesData} refetch={refetch} loading={loading} />
+        <CryptoDashboard coins={coins} setCoins={setCoins} refetch={refetch} loading={loading} />
       </AnimatedMotion>
       <AnimatedMotion>
-        <ApexChart coins={coins} refetch={refetch} loading={loading} />
+        <ApexChart coins={coins} />
       </AnimatedMotion>
       <motion.div variants={containerVariants} initial="hidden" animate="show">
         <CurvedBottomNavigation />
