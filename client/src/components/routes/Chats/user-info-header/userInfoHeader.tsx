@@ -2,14 +2,13 @@
 
 import React from 'react';
 import { Avatar, Box, Button, IconButton, Typography } from '@mui/material';
-
-// Icons
 import { TbMessage, TbPhone, TbPlus, TbUserCircle } from 'react-icons/tb';
 import { TiContacts } from 'react-icons/ti';
 import AnimatedMotion from '@/components/AnimatedMotion';
 import CustomDialog from '@/components/custom/CustomDialog';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 
+// Header Section
 const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => (
   <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: 2, borderColor: 'primary.main' }}>
     <Box display="flex" alignItems="center" gap={1.2}>
@@ -35,10 +34,11 @@ const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => (
   </Box>
 );
 
-const ContactsSection = ({ contactModal, setContactModal, getContactData }: any) => {
+// Contacts Section
+const ContactsSection = ({ getContactData, setContactModal }: any) => {
   return (
     <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-      <Box onClick={getContactData} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: 2, borderColor: 'primary.main' }}>
+      <Box onClick={getContactData} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: 2, borderColor: 'primary.main', cursor: 'pointer' }}>
         <Typography color="text.primary" variant="h5" fontWeight={900}>
           مخاطبین
         </Typography>
@@ -47,7 +47,7 @@ const ContactsSection = ({ contactModal, setContactModal, getContactData }: any)
         </IconButton>
       </Box>
 
-      <Box onClick={() => setContactModal((prev: any) => ({ ...prev, open_add_contacts_modal: true }))} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: 2, borderColor: 'primary.main' }}>
+      <Box onClick={() => setContactModal((prev: any) => ({ ...prev, open_add_contacts_modal: true }))} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: 2, borderColor: 'primary.main', cursor: 'pointer' }}>
         <Typography color="text.primary" variant="h5" fontWeight={900}>
           افزودن
         </Typography>
@@ -59,10 +59,11 @@ const ContactsSection = ({ contactModal, setContactModal, getContactData }: any)
   );
 };
 
+// Main Component
 export default function UserInfoHeader() {
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const [contactModal, setContactModal] = React.useState({
-    contacts: [],
+    contacts: [] as any[],
     open_contacts_list_modal: false,
     open_add_contacts_modal: false,
   });
@@ -72,62 +73,51 @@ export default function UserInfoHeader() {
   };
 
   async function getContactData() {
-    setContactModal((prev) => ({ ...prev, open_contacts_list_modal: true }));
-    // if ('contacts' in navigator) {
-    //   try {
-    //     const props = ['name', 'tel'];
-    //     const options = { multiple: true };
-
-    //     const contacts = await navigator.contacts.select(props, options);
-
-    //     if (contacts.length) {
-    //       setContactModal((prev) => ({ ...prev, contacts, open_contacts_list_modal: true }));
-    //     }
-    //   } catch (error) {
-    //     console.error('Error selecting contacts:', error);
-    //   }
-    // } else {
-    //   alert('Contact Picker API is not supported on this browser.');
-    // }
+    if ('contacts' in navigator && typeof (navigator as any).contacts?.select === 'function') {
+      const contactsApi = (navigator as any).contacts;
+      contactsApi
+        .select(['name', 'tel'], { multiple: true })
+        .then((contacts) => {
+          setContactModal((prev) => ({ ...prev, contacts, open_contacts_list_modal: true }));
+        })
+        .catch(console.error);
+    } else {
+      alert('Contact Picker API is not supported on this browser.');
+    }
   }
-
-  const invitation = '';
 
   return (
     <>
-      <Box mb={4} mt={2} display={'flex'} justifyContent={'center'} flexDirection={'column'} gap={2}>
+      <Box mb={4} mt={2} display="flex" justifyContent="center" flexDirection="column" gap={2}>
         <HeaderSection isSettingOpen={isProfileOpen} setIsSettingOpen={setIsProfileOpen} />
-        <ContactsSection contacts={contactModal} setContacts={setContactModal} getContactData={getContactData} />
+        <ContactsSection setContactModal={setContactModal} getContactData={getContactData} />
       </Box>
 
+      {/* Contacts Modal */}
       {contactModal.open_contacts_list_modal && (
-        <CustomDialog open={contactModal.open_contacts_list_modal} onClose={() => handleClose('open_contacts_list_modal')} maxWidth={'md'} title={'لیست مخاطبین'}>
+        <CustomDialog open={contactModal.open_contacts_list_modal} onClose={() => handleClose('open_contacts_list_modal')} maxWidth="md" title="لیست مخاطبین">
           <AnimatedMotion>
-            <Box width={'100%'} display={'flex'} alignItems={'center'} justifyContent={'center'} flexDirection={'column'} gap={2}>
-              {[...Array(10)].map((_, index) => (
+            <Box width="100%" display="flex" flexDirection="column" gap={2}>
+              {contactModal.contacts.map((contact: any, index) => (
                 <Box key={index} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '16px', p: 2, borderColor: 'primary.main' }}>
-                  <Box display={'flex'} alignItems={'center'} gap={1}>
-                    <Avatar sx={{ width: 50, height: 50 }} />
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Avatar src={contact.icon?.[0] || ''} sx={{ width: 50, height: 50 }} />
                     <Box>
                       <Typography color="text.primary" variant="h6" fontWeight={900}>
-                        آرش موسوی
+                        {contact.name?.[0] || 'بدون نام'}
                       </Typography>
-                      <Typography color="text.disabled" variant="body1" fontWeight={600}>
-                        {ConvertToPersianDigit('09906451808')}
-                      </Typography>
+                      {contact.tel?.[0] && (
+                        <Typography color="text.disabled" variant="body1" fontWeight={600}>
+                          {ConvertToPersianDigit(contact.tel[0])}
+                        </Typography>
+                      )}
                     </Box>
                   </Box>
-                  {/* // TODO: check the user exists in zichat or not for sending invitation */}
+
                   <Box>
-                    {true ? (
-                      <Button variant="contained" sx={{ color: '#fff', borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }}>
-                        <Typography variant="body1">دعوت</Typography>
-                      </Button>
-                    ) : (
-                      <IconButton sx={{ color: 'primary.main', '&:hover': { color: 'primary.dark' } }}>
-                        <TbMessage size={28} />
-                      </IconButton>
-                    )}
+                    <Button variant="contained" sx={{ color: '#fff', borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }}>
+                      <Typography variant="body1">دعوت</Typography>
+                    </Button>
                   </Box>
                 </Box>
               ))}
