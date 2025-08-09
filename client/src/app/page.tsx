@@ -12,7 +12,6 @@ import { motion } from 'framer-motion';
 import AnimatedMotion from '@/components/AnimatedMotion';
 import SideBar from '@/components/UI/sidebar/sidebar';
 import Home from '@/components/routes/home/Home';
-import UserInfoHeader from '@/components/routes/Chats/user-info-header/userInfoHeader';
 
 // Variants
 const containerVariants: any = {

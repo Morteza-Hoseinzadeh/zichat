@@ -1,12 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Avatar, Box, Button, IconButton, Typography } from '@mui/material';
 import { TbMessage, TbPhone, TbPlus, TbUserCircle } from 'react-icons/tb';
 import { TiContacts } from 'react-icons/ti';
 import AnimatedMotion from '@/components/AnimatedMotion';
 import CustomDialog from '@/components/custom/CustomDialog';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
+import CustomSnackbar from '@/components/custom/CustomSnackbar';
+import axiosInstance from '@/utils/hooks/axiosInstance';
 
 // Header Section
 const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => (
@@ -61,9 +63,13 @@ const ContactsSection = ({ getContactData, setContactModal }: any) => {
 
 // Main Component
 export default function UserInfoHeader() {
+  const [contacts, setContacts] = React.useState([]);
+
+  const [showSnackbar, setShowSnackbar] = React.useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState('');
+
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const [contactModal, setContactModal] = React.useState({
-    contacts: [] as any[],
     open_contacts_list_modal: false,
     open_add_contacts_modal: false,
   });
@@ -72,17 +78,28 @@ export default function UserInfoHeader() {
     setContactModal((prev) => ({ ...prev, [key]: false }));
   };
 
+  async function handleAddContact(contacts) {
+    try {
+      const { name, tel, icon } = contacts;
+      await axiosInstance({
+        method: 'POST',
+        data: JSON.stringify({ name, tel, icon }),
+      });
+    } catch (error) {}
+  }
+
   async function getContactData() {
     if ('contacts' in navigator && typeof (navigator as any).contacts?.select === 'function') {
       const contactsApi = (navigator as any).contacts;
       contactsApi
-        .select(['name', 'tel'], { multiple: true })
+        .select(['name', 'tel', 'icon'], { multiple: true })
         .then((contacts) => {
-          setContactModal((prev) => ({ ...prev, contacts, open_contacts_list_modal: true }));
+          setContactModal((prev) => ({ ...prev, open_contacts_list_modal: true }));
         })
         .catch(console.error);
     } else {
-      alert('Contact Picker API is not supported on this browser.');
+      setShowSnackbar(true);
+      setSnackbarMsg('Contact Picker API is not supported on this browser.');
     }
   }
 
@@ -98,7 +115,7 @@ export default function UserInfoHeader() {
         <CustomDialog open={contactModal.open_contacts_list_modal} onClose={() => handleClose('open_contacts_list_modal')} maxWidth="md" title="لیست مخاطبین">
           <AnimatedMotion>
             <Box width="100%" display="flex" flexDirection="column" gap={2}>
-              {contactModal.contacts.map((contact: any, index) => (
+              {contacts.map((contact: any, index) => (
                 <Box key={index} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '16px', p: 2, borderColor: 'primary.main' }}>
                   <Box display="flex" alignItems="center" gap={1}>
                     <Avatar src={contact.icon?.[0] || ''} sx={{ width: 50, height: 50 }} />
@@ -124,6 +141,11 @@ export default function UserInfoHeader() {
             </Box>
           </AnimatedMotion>
         </CustomDialog>
+      )}
+      {showSnackbar && (
+        <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="info">
+          <span>{snackbarMsg}</span>
+        </CustomSnackbar>
       )}
     </>
   );

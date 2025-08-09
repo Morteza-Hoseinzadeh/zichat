@@ -4,13 +4,14 @@ import { Provider } from 'react-redux';
 import store from '@/utils/toolkit/store';
 import ThemedLayout from '@/components/ThemedLayout';
 import '@/utils/styles/globals.css';
+import { AuthProvider } from '@/utils/context/AuthContext';
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode | any }>) {
   return (
-    <html lang="fa" dir="rtl">
+    <AuthProvider>
       <Provider store={store}>
         <ThemedLayout>{children}</ThemedLayout>
       </Provider>
-    </html>
+    </AuthProvider>
   );
 }

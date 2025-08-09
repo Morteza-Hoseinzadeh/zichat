@@ -13,14 +13,14 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   const pathname = usePathname();
 
   return (
-    <>
+    <html lang="fa" dir="rtl">
       <DynamicMetadata />
       <ThemeProvider theme={theme}>
         <body style={{ backgroundColor: theme.palette.background.default }}>
           <main style={{ position: 'relative', zIndex: 1, margin: pathname.includes('/direct/pv/') ? '0' : '16px' }}>{children}</main>
         </body>
       </ThemeProvider>
-    </>
+    </html>
   );
 };
 
