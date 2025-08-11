@@ -1,7 +1,7 @@
 const connection = require('../dbConnection');
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = '942691ec528167ae3fedbb03d573370d473ad532f9465976d1ccf320f4a3fa6x';
+const SECRET_KEY = '35eed3d46ebbc0cc36b675ea0f4fcc65422ca4f777b3b2338949f0a32f602077';
 
 const id = uuidv4();
 const user_id = uuidv4();

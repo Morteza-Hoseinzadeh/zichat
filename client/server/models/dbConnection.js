@@ -5,6 +5,9 @@ const connection = mysql.createConnection({
   user: process.env.DB_USER || 'Admin',
   password: process.env.DB_PASSWORD || '09906451808@Morteza',
   database: process.env.DB_NAME || 'zichat',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
 connection.connect((err) => {
