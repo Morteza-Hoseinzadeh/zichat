@@ -31,19 +31,15 @@ export default function SignIn() {
   const tabs = [
     { title: 'خوش آمدید', component: <TabWelcome /> },
     { title: 'شماره تلفن خود را وارد کنید', component: <TabPhone form={form} setForm={setForm} /> },
-    { title: 'کد تایید', component: <TabOtp otpCode={otpCode} setOtpCode={setOtpCode} /> },
+    { title: 'کد تایید', component: <TabOtp otpCode={otpCode} setOtpCode={setOtpCode} phoneNumber={form.phone} /> },
     { title: 'تایید اطلاعات', component: <TabConfirm form={form} /> },
   ];
 
   const handleCheckPhoneValidation = async () => {
-    if (currentTab === 1 && form.phone.trim() !== '')
-      try {
-        console.log(form.phone);
-        const response = await axiosInstance.get(`/api/check/check-phone/+98${form.phone}`);
-        return setIsUserExist(response?.data);
-      } catch (error) {
-        console.log(error);
-      }
+    if (currentTab === 1 && form.phone.trim() !== '') {
+      const response = await axiosInstance.get(`/api/check/check-phone/+98${form.phone}`);
+      return setIsUserExist(response?.data);
+    }
   };
 
   const handleTabs = (action) => {

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 
-import { Box, Typography, Menu, MenuItem, InputBase } from '@mui/material';
+import { Box, Typography, Menu, MenuItem, InputBase, useTheme } from '@mui/material';
 
 import ConvertToEnglishDigit from '@/utils/functions/convertToEnglishDigit';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
@@ -10,6 +10,8 @@ import { TbChevronDown } from 'react-icons/tb';
 const countryCodes = [{ code: '+98', name: 'ایران', flag: 'IR' }];
 
 export default function TabPhone({ form, setForm }) {
+  const theme = useTheme();
+
   const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
   const [phoneError, setPhoneError] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
@@ -23,7 +25,7 @@ export default function TabPhone({ form, setForm }) {
     }
 
     if (selectedCountry.code === '+98' && !/^9\d{9}$/.test(phone)) {
-      setPhoneError('شماره موبایل معتبر نیست (مثال: 9123456789)');
+      setPhoneError(`شماره موبایل معتبر نیست (مثال: ${ConvertToPersianDigit(9123456789)})`);
       return false;
     }
 
@@ -76,7 +78,7 @@ export default function TabPhone({ form, setForm }) {
           <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.85rem' }}>
             {ConvertToPersianDigit(selectedCountry.code)}
           </Typography>
-          <TbChevronDown size={16} style={{ color: 'text.secondary' }} />
+          <TbChevronDown size={16} style={{ color: theme.palette.text.primary }} />
         </Box>
 
         {/* Divider */}
