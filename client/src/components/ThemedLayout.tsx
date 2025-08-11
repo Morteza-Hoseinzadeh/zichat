@@ -1,6 +1,6 @@
 // app/layout.tsx
 import React, { useEffect } from 'react';
-import { Box, CircularProgress, ThemeProvider, Typography } from '@mui/material';
+import { ThemeProvider } from '@mui/material';
 import { useThemeMode } from '@/utils/hooks/useThemeMode';
 import DynamicMetadata from './DynamicMetaData';
 import { usePathname, useRouter } from 'next/navigation';
@@ -10,8 +10,8 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-const publicRoutes = ['/authentication/sign-in', '/authentication/sign-up'];
-const authRoutes = ['/authentication/sign-in', '/authentication/sign-up'];
+const publicRoutes = ['/authentication/sign-up'];
+const authRoutes = ['/authentication/sign-up'];
 
 const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   const { theme } = useThemeMode();
@@ -34,18 +34,6 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
       router.push('/authentication/sign-in');
     }
   }, [user, loading, pathname, router]);
-
-  if (loading) {
-    return (
-      <html lang="fa" dir="rtl">
-        <body style={{ backgroundColor: theme.palette.background.default }}>
-          <Box width={'100%'} display={'flex'} alignItems={'center'} justifyContent={'center'} height={'100vh'} flexDirection="column" gap={2}>
-            <CircularProgress sx={{ color: 'primary.main' }} />
-          </Box>
-        </body>
-      </html>
-    );
-  }
 
   return (
     <html lang="fa" dir="rtl">

@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
-const connection = require('../../models/dbConnection');
-const { verifyToken } = require('../../middlewares/auth/auth');
+const connection = require('../../../models/dbConnection');
+const { verifyToken } = require('../../../middlewares/auth/auth');
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -23,7 +23,7 @@ const query = async (sql, params) => {
 };
 
 // User verification endpoint
-router.get('/check-user/:user_id', verifyToken, async (req, res) => {
+router.get('/user/:user_id', verifyToken, async (req, res) => {
   try {
     const { user_id } = req.params;
     const tokenUserId = req?.user?.user_id;
@@ -55,7 +55,7 @@ router.get('/check-user/:user_id', verifyToken, async (req, res) => {
 });
 
 // User registration endpoint
-router.post('/', async (req, res) => {
+router.post('/sign-in', async (req, res) => {
   try {
     const { username, phone, profile_picture, status = 'active', role = 'user' } = req.body;
 

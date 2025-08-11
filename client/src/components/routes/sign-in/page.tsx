@@ -1,15 +1,26 @@
 'use client';
 
-import { useThemeMode } from '@/utils/hooks/useThemeMode';
-import { Box, Button, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
 import React from 'react';
+
+// Utils
+import { useAuth } from '@/utils/contexts/AuthContext';
+import { useThemeMode } from '@/utils/hooks/useThemeMode';
+
+import { Box, Button, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
+
+// Icons
 import { TbArrowLeft, TbArrowRight, TbMoon, TbSun } from 'react-icons/tb';
 
 export default function SignIn() {
   const theme = useTheme();
+
+  const { user } = useAuth();
   const { toggleTheme, isDarkMode } = useThemeMode();
 
   const matchMdDown = useMediaQuery(theme.breakpoints.down('md'));
+
+  const signUpTabs = ['خوش آمدید', 'شماره تلفن خود را وارد کنید', 'کد تایید', 'وارد کردن اطلاعات', 'تایید اطلاعات'];
+  const signInTabs = ['خوش آمدید', 'شماره تلفن خود را وارد کنید', 'کد تایید', 'تایید اطلاعات'];
 
   return (
     <Box sx={{ ...styles.container, background: `radial-gradient(circle, ${theme.palette.primary.light} 0%, transparent 45%)` }}>
@@ -28,7 +39,7 @@ export default function SignIn() {
 
         {/* Welcome Text */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant={matchMdDown ? 'h5' : 'h4'} fontWeight={700} color="text.primary" sx={{ mb: 1 }}>
+          <Typography variant={matchMdDown ? 'h5' : 'h4'} fontWeight={900} color="text.primary" sx={{ mb: 1 }}>
             به زیچت خوش آمدید 🎉
           </Typography>
           <Typography variant="subtitle1" color="text.secondary" sx={{ opacity: 0.8 }}>
@@ -47,8 +58,8 @@ export default function SignIn() {
         </Box>
 
         {/* Footer Note */}
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4, opacity: 0.6, fontSize: '0.75rem' }}>
-          با ورود یا  نام، با شرایط و قوانین موافقت می‌کنید
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 4, opacity: 0.6, fontSize: '0.75rem', textDecoration: 'underline' }}>
+          <a href="/privacy">با ورود یا نام، با شرایط و قوانین موافقت می‌کنید</a>
         </Typography>
       </Box>
 

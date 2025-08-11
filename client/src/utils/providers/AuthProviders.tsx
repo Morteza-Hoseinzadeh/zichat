@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      const response = await axiosInstance.get(`/api/sign-in/check-user/${user_id}`, {
+      const response = await axiosInstance.get(`/api/auth/user/${user_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
