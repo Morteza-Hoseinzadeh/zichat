@@ -41,10 +41,7 @@ router.get('/user/:user_id', verifyToken, async (req, res) => {
 
     const user = await query('SELECT * FROM users WHERE user_id = ? LIMIT 1', [user_id]);
 
-    return res.json({
-      exists: user.length > 0,
-      user: user[0] || null,
-    });
+    return res.json({ exists: user.length > 0, user: user[0] || null });
   } catch (error) {
     console.error('Error checking user:', error);
     res.status(500).json({
