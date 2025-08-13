@@ -51,3 +51,13 @@ export const navItems = [
     description: 'مطالب و خبرهای جدید و جذاب را از اینجا بخوان',
   },
 ];
+export const avatars = [
+  { src: '/assets/avatars/male-avatar-0.png', gender: 'male' },
+  { src: '/assets/avatars/male-avatar-1.png', gender: 'male' },
+  { src: '/assets/avatars/male-avatar-2.png', gender: 'male' },
+  { src: '/assets/avatars/male-avatar-3.png', gender: 'male' },
+  { src: '/assets/avatars/female-avatar-0.png', gender: 'female' },
+  { src: '/assets/avatars/female-avatar-1.png', gender: 'female' },
+  { src: '/assets/avatars/female-avatar-2.png', gender: 'female' },
+  { src: '/assets/avatars/female-avatar-3.png', gender: 'female' },
+];

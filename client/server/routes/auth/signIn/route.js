@@ -51,44 +51,55 @@ router.get('/user/:user_id', verifyToken, async (req, res) => {
   }
 });
 
-// User registration endpoint
+// User sign-in endpoint (handles both registration and login)
 router.post('/sign-in', async (req, res) => {
   try {
-    const { username, phone, profile_picture, status = 'active', role = 'user' } = req.body;
+    const { username, phone, profile_picture = '', status = 'active', role = 'user' } = req.body;
 
-    if (!username || !phone) {
-      return res.status(400).json({
-        message: 'Username and phone are required',
-        fields: { username: !username, phone: !phone },
-      });
+    // 1. Only phone is required
+    if (!phone) {
+      return res.status(400).json({ message: 'Phone number is required' });
     }
 
-    const id = uuidv4();
-    const user_id = uuidv4();
+    // 2. Check if user exists (phone only)
+    const [user] = await query(`SELECT user_id, role FROM users WHERE phone = ? LIMIT 1`, [phone]);
+
     const now = new Date();
-    const token = jwt.sign({ user_id: user_id, role: role }, SECRET_KEY, { expiresIn: '30d' });
+    let user_id, token;
+
+    // 3. EXISTING USER → Update token & timestamp
+    if (user) {
+      user_id = user.user_id;
+      token = jwt.sign({ user_id, role: user.role || role }, SECRET_KEY, { expiresIn: '30d' });
+
+      await query(`UPDATE users SET token = ?, updated_at = ? WHERE phone = ?`, [token, now, phone]);
+
+      return res.status(200).json({ success: true, user_id, token, expiresIn: '30d' });
+    }
+
+    // 4. NEW USER → Insert (no duplicate checks)
+    user_id = uuidv4();
+    token = jwt.sign({ user_id, role }, SECRET_KEY, { expiresIn: '30d' });
 
     await query(
       `INSERT INTO users 
-      (id, user_id, username, phone, profile_picture, status, role, created_at, updated_at, token) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, user_id, username, phone, profile_picture || null, status, role, now, now, token]
+      (user_id, username, phone, profile_picture, status, role, created_at, updated_at, token) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user_id, username, phone, profile_picture || null, status, role, now, now, token]
     );
 
-    res.status(201).json({ message: 'User registered successfully', user_id, token, expiresIn: '30d' });
+    return res.status(201).json({
+      success: true,
+      user_id,
+      token,
+      expiresIn: '30d',
+    });
   } catch (error) {
-    console.error('Error registering user:', error);
-
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({
-        message: 'User already exists',
-        field: error.message.includes('phone') ? 'phone' : 'username',
-      });
-    }
-
-    res.status(500).json({
-      message: 'Registration failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    console.error('Sign-in error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 });

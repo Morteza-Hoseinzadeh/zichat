@@ -23,7 +23,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
     if (loading) return;
 
     // If on auth route and already logged in
-    if (user && authRoutes.some((route) => pathname?.startsWith(route))) {
+    if (user) {
       router.push('/');
       return;
     }
