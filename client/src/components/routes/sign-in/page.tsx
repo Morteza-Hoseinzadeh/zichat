@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Button, IconButton, Typography, useTheme } from '@mui/material';
 
 // Icons
@@ -9,6 +9,7 @@ import { TbArrowLeft, TbArrowRight, TbMoon, TbSun } from 'react-icons/tb';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import axiosInstance from '@/utils/hooks/axiosInstance';
+import { useAuth } from '@/utils/contexts/AuthContext';
 import { useThemeMode } from '@/utils/hooks/useThemeMode';
 
 // Import tab components
@@ -20,10 +21,12 @@ import CustomSnackbar from '@/components/custom/CustomSnackbar';
 import { useRouter } from 'next/navigation';
 
 export default function SignIn() {
-  const router = useRouter();
+  const { user } = useAuth();
+  const { toggleTheme, isDarkMode } = useThemeMode();
 
   const theme = useTheme();
-  const { toggleTheme, isDarkMode } = useThemeMode();
+
+  const router = useRouter();
 
   const [form, setForm] = useState({ username: '', phone: '', profile_picture: '' });
 
@@ -62,11 +65,11 @@ export default function SignIn() {
       setSnackbarVariant('success');
 
       const localStorageItem: any = { token: response?.data?.token, user_id: response?.data?.user_id };
-      await localStorage.setItem('user-id', JSON.stringify(localStorageItem));
+      localStorage.setItem('user-id', JSON.stringify(localStorageItem));
 
-      await setInterval(() => {
+      setInterval(() => {
         setLoading(true);
-        return router.push('/');
+        window.location.reload();
       }, 1500);
 
       setLoading(false);
@@ -112,6 +115,13 @@ export default function SignIn() {
     if (currentTab === 3 && !form.username.length && !isUserExist?.exists) return true;
   }
 
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+      return;
+    }
+  }, [user]);
+
   return (
     <>
       <Box sx={{ ...styles.container, background: `radial-gradient(circle, ${theme.palette.primary.light} 0%, transparent 45%)` }}>
@@ -139,7 +149,7 @@ export default function SignIn() {
 
           {/* Action Buttons */}
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 4, '& .MuiButton-root': { borderRadius: 3, px: 4, py: 1.5, fontWeight: 600, transition: 'all 0.2s ease', '&:hover': { transform: 'translateY(-2px)' } } }}>
-            <Button disabled={handleDisabledButtonLogic()} onClick={() => handleActionButtons('plus')} variant="contained" color="primary" size="large" startIcon={<TbArrowRight size={20} style={{ marginLeft: 4 }} />} sx={{ boxShadow: `0 4px 12px ${theme.palette.primary.light}` }}>
+            <Button disabled={handleDisabledButtonLogic() || loading} onClick={() => handleActionButtons('plus')} variant="contained" color="primary" size="large" startIcon={<TbArrowRight size={20} style={{ marginLeft: 4 }} />} sx={{ boxShadow: `0 4px 12px ${theme.palette.primary.light}` }}>
               {currentTab === tabs.length - 1 ? 'تایید' : 'بعدی'}
             </Button>
             <Button onClick={() => handleActionButtons('minus')} disabled={currentTab === 0} variant="outlined" color="secondary" size="large" endIcon={<TbArrowLeft size={20} style={{ marginRight: 4 }} />}>

@@ -22,12 +22,6 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   useEffect(() => {
     if (loading) return;
 
-    // If on auth route and already logged in
-    if (user) {
-      router.push('/');
-      return;
-    }
-
     // If not on public route and not logged in
     if (!user && !publicRoutes.some((route) => pathname?.startsWith(route))) {
       sessionStorage.setItem('redirectUrl', pathname || '/');
