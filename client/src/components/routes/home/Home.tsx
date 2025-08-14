@@ -6,13 +6,16 @@ import { navItems } from '@/utils/data/data';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import WelcomeCard from './WellcomeCard';
+import { useAuth } from '@/utils/contexts/AuthContext';
 
 export default function Home() {
   const router = useRouter();
 
+  const { user } = useAuth();
+
   return (
     <>
-      <WelcomeCard userName={'Morteza'} />
+      <WelcomeCard userName={user?.username} />
       <Box sx={styles.mainContainer}>
         <Typography align="center" mb={4} variant="h4" sx={styles.title}>
           دسترسی سریع به خدمات

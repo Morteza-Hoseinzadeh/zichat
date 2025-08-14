@@ -7,6 +7,7 @@ import { Typography, Box, Tabs, Tab } from '@mui/material';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 import { TbBroadcast, TbRobot, TbUser, TbUsers } from 'react-icons/tb';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/utils/contexts/AuthContext';
 
 const mock = [
   { id: 1, type: 'user', name: ' حسین زاده', lastMessage: 'سلام، حالت چطوره؟', timestamp: '14:23', unreadCount: 2, avatar: '/assets/avatars/avatar.jpg' },
@@ -77,26 +78,18 @@ function a11yProps(index: number) {
 
 export default function ChatsList() {
   const socketRef = useRef(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     socketRef.current = io('http://localhost:5000');
 
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('register_user', '123'); // replace with user_id api call
+      socketRef.current.emit('register_user', user?.user_id); // replace with user_id api call
     });
 
     return () => {
       socketRef.current.disconnect();
     };
-  }, []);
-
-  async function getData() {
-    const res = await fetch('http://localhost:5000/api/direct/check-status/123');
-    const json = await res.json();
-  }
-
-  useEffect(() => {
-    setTimeout(getData, 2000);
   }, []);
 
   const [value, setValue] = React.useState(0);

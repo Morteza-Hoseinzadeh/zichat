@@ -15,7 +15,7 @@ const WelcomeCard = ({ userName }: any) => {
         {/* Content */}
         <Box sx={styles.content}>
           <Typography variant="h5" sx={styles.greeting}>
-            <GlitchText text={`سلام ${userName} عزیز خوش اومدی! 🎉`} />
+            <GlitchText text={`سلام ${userName} عزیز خوش اومدی! 💜`} />
           </Typography>
           <Typography variant="body1" sx={styles.message}>
             به پیام رسان زیچت خوش آمدید. امروز چه کاری می‌خواهید انجام دهید؟
