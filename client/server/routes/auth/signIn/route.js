@@ -78,14 +78,15 @@ router.post('/sign-in', async (req, res) => {
     }
 
     // 4. NEW USER → Insert (no duplicate checks)
+    const id = uuidv4();
     user_id = uuidv4();
     token = jwt.sign({ user_id, role }, SECRET_KEY, { expiresIn: '30d' });
 
     await query(
       `INSERT INTO users 
-      (user_id, username, phone, profile_picture, status, role, created_at, updated_at, token) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [user_id, username, phone, profile_picture || null, status, role, now, now, token]
+      (id, user_id, username, phone, profile_picture, status, role, created_at, updated_at, token) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, user_id, username, phone, profile_picture || null, status, role, now, now, token]
     );
 
     return res.status(201).json({
