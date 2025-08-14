@@ -1,35 +1,59 @@
+// routes/contacts.js
 const express = require('express');
 const router = express.Router();
-const { connection } = require('../../models/dbConnection');
-const { v4: uuidv4 } = require('uuid');
 
-router.post('/add', async (req, res) => {
+const connection = require('../../models/dbConnection');
+const { verifyToken } = require('../../middlewares/auth/auth');
+
+// Get all contacts for user
+router.get('/', verifyToken, async (req, res) => {
   try {
-    const { user_id, contact_name, contact_phone, contact_email, avatar_url } = req.body;
+    const { user_id } = req.user;
+    const [contacts] = await connection.promise().query('SELECT id, contact_name, phone_number, avatar_url FROM zichat.contacts WHERE user_id = ?', [user_id]);
+    res.json(contacts);
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
-    if (!user_id || !contact_name || !contact_phone) {
-      return res.status(400).json({ error: 'user_id, contact_name, and contact_phone are required' });
+// Add new contacts
+router.post('/', verifyToken, async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { contacts } = req.body;
+
+    if (!contacts || !Array.isArray(contacts)) {
+      return res.status(400).json({ message: 'Invalid contacts data' });
     }
 
-    // Check if contact_phone exists in users table
-    const [userRows] = await connection.promise().query('SELECT id FROM users WHERE phone = ? LIMIT 1', [contact_phone]);
+    const values = contacts.map((contact) => [user_id, contact.name || 'Unknown', contact.phone_number, contact.avatar_url || null]);
 
-    const is_registered = userRows.length > 0 ? 1 : 0;
+    await connection.promise().query('INSERT INTO zichat.contacts (user_id, contact_name, phone_number, avatar_url) VALUES ?', [values]);
 
-    const contactId = uuidv4();
-
-    const sql = `
-      INSERT INTO contacts 
-      (id, user_id, contact_name, contact_phone, contact_email, avatar_url, is_registered, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-    `;
-
-    await connection.promise().query(sql, [contactId, user_id, contact_name, contact_phone, contact_email || null, avatar_url || null, is_registered]);
-
-    res.json({ success: true, message: 'Contact added successfully', id: contactId, is_registered });
+    res.json({ message: 'Contacts added successfully' });
   } catch (error) {
-    console.error('Error adding contact:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error adding contacts:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete contact
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { id } = req.params;
+
+    const [result] = await connection.promise().query('DELETE FROM zichat.contacts WHERE id = ? AND user_id = ?', [id, user_id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Contact not found' });
+    }
+
+    res.json({ message: 'Contact deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting contact:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
