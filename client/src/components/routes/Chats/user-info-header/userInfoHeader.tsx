@@ -152,10 +152,10 @@ const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => {
 };
 
 // Contacts Section
-const ContactsSection = ({ getContactData, setContactModal, contacts }: any) => {
+const ContactsSection = ({ onOpenContactsModal, getContactData, contacts }: any) => {
   return (
     <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-      <Box onClick={getContactData} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: '8px 12px', borderColor: 'primary.main', cursor: 'pointer', backgroundColor: 'background.defualt' }}>
+      <Box onClick={onOpenContactsModal} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: '8px 12px', borderColor: 'primary.main', cursor: 'pointer', backgroundColor: 'background.default' }}>
         <Typography color="text.primary" variant="h6" fontWeight={900}>
           مخاطبین ({ConvertToPersianDigit(contacts.length)})
         </Typography>
@@ -164,7 +164,8 @@ const ContactsSection = ({ getContactData, setContactModal, contacts }: any) => 
         </IconButton>
       </Box>
 
-      <Box onClick={() => setContactModal((prev: any) => ({ ...prev, open_add_contacts_modal: true }))} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: '8px 12px', borderColor: 'primary.main', cursor: 'pointer' }}>
+      {/* Add Contacts Button */}
+      <Box onClick={getContactData} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '12px', p: '8px 12px', borderColor: 'primary.main', cursor: 'pointer' }}>
         <Typography color="text.primary" variant="h6" fontWeight={900}>
           افزودن
         </Typography>
@@ -179,13 +180,13 @@ const ContactsSection = ({ getContactData, setContactModal, contacts }: any) => 
 // Main Component
 export default function UserInfoHeader() {
   const { user } = useAuth();
-
   const token = getToken();
-  const [contacts, setContacts] = React.useState<any[]>([]);
+  const [contacts, setContacts] = React.useState<Contact[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [showSnackbar, setShowSnackbar] = React.useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState('');
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+  const [userStatus, setUserStatus] = React.useState<Record<string, boolean>>({});
 
   const [contactModal, setContactModal] = React.useState({
     open_contacts_list_modal: false,
@@ -196,7 +197,12 @@ export default function UserInfoHeader() {
   const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/api/contacts', { headers: { 'Content-type': 'application/json', Authorization: `Berear ${token}` } });
+      const response = await axiosInstance.get('/api/contacts', {
+        headers: {
+          'Content-type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setContacts(response.data);
     } catch (error) {
       console.error('Failed to fetch contacts:', error);
@@ -205,7 +211,78 @@ export default function UserInfoHeader() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
+
+  // Check which contacts are app users
+  const checkAppUsersStatus = useCallback(
+    async (contacts: Contact[]) => {
+      try {
+        const phoneNumbers = contacts.map((c) => c.phone_number).filter((phone) => phone && /^[\d+]{10,15}$/.test(phone)) as string[];
+
+        if (phoneNumbers.length === 0) return;
+
+        // Process in batches of 20 numbers
+        const batchSize = 20;
+        const batches = [];
+        for (let i = 0; i < phoneNumbers.length; i += batchSize) {
+          batches.push(phoneNumbers.slice(i, i + batchSize));
+        }
+
+        // Process batches sequentially
+        for (const batch of batches) {
+          try {
+            const response = await axiosInstance.post('/api/contacts/check-users', { phone_numbers: batch }, { headers: { Authorization: `Bearer ${token}` } });
+
+            if (response.data.success) {
+              setUserStatus((prev) => ({
+                ...prev,
+                ...response.data.results.reduce((acc: Record<string, boolean>, result: any) => {
+                  if (result.phone_number) {
+                    acc[result.phone_number] = result.is_app_user;
+                  }
+                  return acc;
+                }, {}),
+              }));
+            }
+          } catch (batchError) {
+            console.error('Error in batch processing:', batchError);
+          }
+        }
+      } catch (error) {
+        console.error('Error in checkAppUsersStatus:', error);
+      }
+    },
+    [token]
+  );
+
+  const handleOpenContactsModal = useCallback(async () => {
+    setContactModal((prev) => ({ ...prev, open_contacts_list_modal: true }));
+    try {
+      setLoading(true);
+      await fetchContacts();
+      if (contacts.length > 0) {
+        await checkAppUsersStatus(contacts);
+      }
+    } catch (error) {
+      console.error('Error loading contacts:', error);
+      setShowSnackbar(true);
+      setSnackbarMsg('خطا در دریافت اطلاعات مخاطبین');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchContacts, checkAppUsersStatus, contacts]);
+
+  useEffect(() => {
+    if (contactModal.open_contacts_list_modal && user?.user_id) {
+      const loadData = async () => {
+        await fetchContacts();
+        if (contacts.length > 0) {
+          await checkAppUsersStatus(contacts);
+        }
+      };
+      loadData();
+    }
+  }, [contactModal.open_contacts_list_modal]);
 
   useEffect(() => {
     if (user?.user_id) {
@@ -220,16 +297,22 @@ export default function UserInfoHeader() {
   async function handleAddContact(selectedContacts: any[]) {
     try {
       setLoading(true);
-      await axiosInstance.post('/api/contacts', {
-        contacts: selectedContacts.map(
-          (contact) => ({
+      await axiosInstance.post(
+        '/api/contacts',
+        {
+          contacts: selectedContacts.map((contact) => ({
             name: contact.name?.[0],
             phone_number: contact.tel?.[0],
             avatar_url: contact.icon?.[0],
-          }),
-          { headers: { 'Content-type': 'application/json', Authorization: `Berear ${token}` } }
-        ),
-      });
+          })),
+        },
+        {
+          headers: {
+            'Content-type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       await fetchContacts();
       setContactModal((prev) => ({ ...prev, open_add_contacts_modal: false }));
@@ -252,7 +335,6 @@ export default function UserInfoHeader() {
 
         if (selectedContacts.length > 0) {
           await handleAddContact(selectedContacts);
-          setContactModal((prev) => ({ ...prev, open_contacts_list_modal: true }));
         }
       } catch (error) {
         console.error('Contact selection error:', error);
@@ -267,7 +349,12 @@ export default function UserInfoHeader() {
 
   async function handleDeleteContact(contactId: string) {
     try {
-      await axiosInstance.delete(`/api/contacts/${contactId}`, { headers: { 'Content-type': 'application/json', Authorization: `Berear ${token}` } });
+      await axiosInstance.delete(`/api/contacts/${contactId}`, {
+        headers: {
+          'Content-type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
       await fetchContacts();
       setShowSnackbar(true);
       setSnackbarMsg('مخاطب با موفقیت حذف شد');
@@ -278,16 +365,26 @@ export default function UserInfoHeader() {
     }
   }
 
+  const handleContactAction = (phone: string) => {
+    if (userStatus[phone]) {
+      // Navigate to chat with this user
+      console.log('Start messaging with', phone);
+    } else {
+      // Send invitation
+      console.log('Invite', phone);
+    }
+  };
+
   return (
     <>
       <Box mb={4} mt={2} display="flex" justifyContent="center" flexDirection="column" gap={2}>
         <HeaderSection isSettingOpen={isProfileOpen} setIsSettingOpen={setIsProfileOpen} />
-        <ContactsSection setContactModal={setContactModal} getContactData={getContactData} contacts={contacts} />
+        <ContactsSection setContactModal={setContactModal} getContactData={getContactData} contacts={contacts} onOpenContactsModal={handleOpenContactsModal} />{' '}
       </Box>
 
       {/* Contacts List Modal */}
       {contactModal.open_contacts_list_modal && (
-        <CustomDialog open={contactModal.open_contacts_list_modal} onClose={() => handleClose('open_contacts_list_modal')} maxWidth="md" title={`لیست مخاطبین (${contacts.length})`}>
+        <CustomDialog open={contactModal.open_contacts_list_modal} onClose={() => handleClose('open_contacts_list_modal')} maxWidth="md" title={`لیست مخاطبین (${ConvertToPersianDigit(contacts.length)})`}>
           <AnimatedMotion>
             {loading ? (
               <Box display="flex" justifyContent="center" p={4}>
@@ -299,7 +396,7 @@ export default function UserInfoHeader() {
               </Box>
             ) : (
               <Box width="100%" display="flex" flexDirection="column" gap={2}>
-                {contacts.map((contact: any) => (
+                {contacts.map((contact) => (
                   <Box key={contact.id} width="100%" display="flex" justifyContent="space-between" alignItems="center" sx={{ border: '2px dashed', borderRadius: '16px', p: 2, borderColor: 'primary.main', position: 'relative' }}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Avatar src={contact.avatar_url || ''} sx={{ width: 50, height: 50 }} />
@@ -316,8 +413,8 @@ export default function UserInfoHeader() {
                     </Box>
 
                     <Box display="flex" gap={1}>
-                      <Button variant="contained" sx={{ color: '#fff', borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }}>
-                        <Typography variant="body1">دعوت</Typography>
+                      <Button variant="contained" sx={{ color: '#fff', borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleContactAction(contact.phone_number)}>
+                        <Typography variant="body1">{userStatus[contact.phone_number] ? 'پیام' : 'دعوت'}</Typography>
                       </Button>
                       <IconButton onClick={() => handleDeleteContact(contact.id)} sx={{ color: 'error.main' }}>
                         <TbTrash size={20} />
@@ -331,11 +428,19 @@ export default function UserInfoHeader() {
         </CustomDialog>
       )}
 
-      <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant={snackbarMsg.includes('خطا') ? 'error' : 'success'}>
+      <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant={snackbarMsg.includes('خطا') || snackbarMsg.includes('پشتیبانی') ? 'error' : 'success'}>
         <span>{snackbarMsg}</span>
       </CustomSnackbar>
     </>
   );
+}
+
+interface Contact {
+  id: string;
+  contact_name: string;
+  phone_number: string;
+  avatar_url?: string;
+  status: string;
 }
 
 const styles = {
