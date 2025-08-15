@@ -16,6 +16,7 @@ import axiosInstance from '@/utils/hooks/axiosInstance';
 import { useAuth } from '@/utils/contexts/AuthContext';
 import useGet from '@/utils/hooks/API/useGet';
 import { getToken } from '@/utils/functions/auth/service';
+import { useRouter } from 'next/navigation';
 
 // Header Section
 const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => {
@@ -180,7 +181,10 @@ const ContactsSection = ({ onOpenContactsModal, getContactData, contacts }: any)
 // Main Component
 export default function UserInfoHeader() {
   const { user } = useAuth();
+
   const token = getToken();
+  const router = useRouter();
+
   const [contacts, setContacts] = React.useState<Contact[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [showSnackbar, setShowSnackbar] = React.useState(false);
@@ -412,10 +416,16 @@ export default function UserInfoHeader() {
                       </Box>
                     </Box>
 
-                    <Box display="flex" gap={1}>
-                      <Button variant="contained" sx={{ color: '#fff', borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleContactAction(contact.phone_number)}>
-                        <Typography variant="body1">{userStatus[contact.phone_number] ? 'پیام' : 'دعوت'}</Typography>
-                      </Button>
+                    <Box display="flex" gap={1} sx={{ color: 'text.primary' }}>
+                      {userStatus[contact.phone_number] ? (
+                        <Button variant="contained" sx={{ borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleContactAction(contact.phone_number)}>
+                          پیام
+                        </Button>
+                      ) : (
+                        <Button variant="contained" sx={{ borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleContactAction(contact.phone_number)}>
+                          دعوت
+                        </Button>
+                      )}
                       <IconButton onClick={() => handleDeleteContact(contact.id)} sx={{ color: 'error.main' }}>
                         <TbTrash size={20} />
                       </IconButton>

@@ -7,10 +7,6 @@ const chats_file = require('./routes/chats/route');
 const contacts_file = require('./routes/contacts/route');
 const sign_in_file = require('./routes/auth/signIn/route');
 const user_note_file = require('./routes/user-note/route');
-
-// TODO: develop sign up route
-// const sign_up_file = require('./routes/auth/signIn/route');
-
 const check_phone = require('./routes/auth/check-phone/route');
 
 // Client side routes
