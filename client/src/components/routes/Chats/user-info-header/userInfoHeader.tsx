@@ -369,14 +369,20 @@ export default function UserInfoHeader() {
     }
   }
 
-  const handleContactAction = (phone: string) => {
-    if (userStatus[phone]) {
-      // Navigate to chat with this user
-      console.log('Start messaging with', phone);
-    } else {
-      // Send invitation
-      console.log('Invite', phone);
-    }
+  const handleContactAction = (phone: string, id) => {
+    if (userStatus[phone]) router.push(`/direct/pv/${id}`);
+  };
+
+  const generateSMSLink = (phone, username) => {
+    const message = `سلام عزیزم 👋
+${username} شما را به زیچت دعوت کرده!
+
+برای چت امن و راحت اینجا کلیک کن:
+https://zichat.ir/
+
+به جمع ما بپیوند!`;
+
+    return `sms:+98${phone}?body=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -410,7 +416,7 @@ export default function UserInfoHeader() {
                         </Typography>
                         {contact.phone_number && (
                           <Typography color="text.disabled" variant="body1" fontWeight={600}>
-                            {ConvertToPersianDigit(contact.phone_number)}
+                            {contact.phone_number.startsWith('9') ? ConvertToPersianDigit('0' + contact.phone_number) : ConvertToPersianDigit(contact.phone_number)}
                           </Typography>
                         )}
                       </Box>
@@ -418,11 +424,11 @@ export default function UserInfoHeader() {
 
                     <Box display="flex" gap={1} sx={{ color: 'text.primary' }}>
                       {userStatus[contact.phone_number] ? (
-                        <Button variant="contained" sx={{ borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleContactAction(contact.phone_number)}>
+                        <Button variant="contained" sx={{ borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleContactAction(contact.phone_number, contact.id)}>
                           پیام
                         </Button>
                       ) : (
-                        <Button variant="contained" sx={{ borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }} onClick={() => handleContactAction(contact.phone_number)}>
+                        <Button href={generateSMSLink(contact?.phone_number, user.username)} variant="contained" sx={{ borderRadius: '12px', '&:hover': { backgroundColor: 'primary.dark' } }}>
                           دعوت
                         </Button>
                       )}
