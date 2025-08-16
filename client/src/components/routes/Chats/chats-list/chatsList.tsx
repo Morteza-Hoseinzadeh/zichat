@@ -86,7 +86,7 @@ export default function ChatsList() {
   const router = useRouter();
 
   const handleGetChatData = (chat_id: string | number) => {
-    router.push(`/direct/pv/${chat_id}`);
+    router.push(`/chat/pv/${chat_id}`);
   };
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {

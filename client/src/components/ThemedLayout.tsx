@@ -34,7 +34,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
       <DynamicMetadata />
       <ThemeProvider theme={theme}>
         <body style={{ backgroundColor: theme.palette.background.default, margin: 0, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          <main style={{ flex: 1, position: 'relative', zIndex: 1, margin: pathname?.includes('/direct/pv/') || pathname?.includes('/authentication/sign-in') ? '0' : '16px' }}>{children}</main>
+          <main style={{ flex: 1, position: 'relative', zIndex: 1, margin: pathname?.includes('/chat/pv/') || pathname?.includes('/authentication/sign-in') ? '0' : '16px' }}>{children}</main>
         </body>
       </ThemeProvider>
     </html>

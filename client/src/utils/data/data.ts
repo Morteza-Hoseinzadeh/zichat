@@ -9,7 +9,7 @@ export const navItems = [
     description: 'ورود به داشبورد و مشاهده خلاصه‌ای از امکانات',
   },
   {
-    id: '/direct',
+    id: '/chat',
     fa_label: 'گفتگوها',
     emoji: '💬',
     icon: TbMessage,

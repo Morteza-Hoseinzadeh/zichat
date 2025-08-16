@@ -11,7 +11,7 @@ const check_phone = require('./routes/auth/check-phone/route');
 
 // Client side routes
 router.use('/crypto', crypto_file);
-router.use('/direct', chats_file);
+router.use('/chat', chats_file);
 router.use('/contacts', contacts_file);
 router.use('/auth', sign_in_file);
 router.use('/check', check_phone);

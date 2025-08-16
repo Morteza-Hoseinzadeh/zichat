@@ -23,7 +23,7 @@ const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => {
   const theme = useTheme();
   const { user, refetch } = useAuth();
 
-  const { data: status } = useGet(`/api/direct/check-status/${user?.user_id}`);
+  const { data: status } = useGet(`/api/chat/check-status/${user?.user_id}`);
   const isUserOnline = useMemo(() => status || 'offline', []);
 
   const [openNoteModal, setOpenNoteModal] = useState(false);
@@ -370,7 +370,7 @@ export default function UserInfoHeader() {
   }
 
   const handleContactAction = (phone: string, id) => {
-    if (userStatus[phone]) router.push(`/direct/pv/${id}`);
+    if (userStatus[phone]) router.push(`/chat/pv/${id}`);
   };
 
   const generateSMSLink = (phone, username) => {
