@@ -14,17 +14,17 @@ import CustomSnackbar from '@/components/custom/CustomSnackbar';
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 import axiosInstance from '@/utils/hooks/axiosInstance';
 import { useAuth } from '@/utils/contexts/AuthContext';
-import useGet from '@/utils/hooks/API/useGet';
 import { getToken } from '@/utils/functions/auth/service';
 import { useRouter } from 'next/navigation';
+import io from 'socket.io-client';
 
 // Header Section
 const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => {
   const theme = useTheme();
+  const token = getToken();
   const { user, refetch } = useAuth();
 
-  const { data: status } = useGet(`/api/chat/check-status/${user?.user_id}`);
-  const isUserOnline = useMemo(() => status || 'offline', []);
+  const [isUserOnline, setIsUserOnline] = useState(false);
 
   const [openNoteModal, setOpenNoteModal] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -76,6 +76,28 @@ const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => {
     setSnackbarVariant(variant);
     setShowSnackbar(true);
   };
+
+  async function handleGetData() {
+    try {
+      const response = await axiosInstance.get(`/api/chat/check-status/${user?.user_id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return setIsUserOnline(response?.data?.online);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      setTimeout(() => {
+        handleGetData();
+      }, 1500);
+    }
+  }, []);
 
   const checkStatus = isUserOnline ? 'secondary.main' : 'text.disabled';
 
@@ -181,6 +203,7 @@ const ContactsSection = ({ onOpenContactsModal, getContactData, contacts }: any)
 // Main Component
 export default function UserInfoHeader() {
   const { user } = useAuth();
+  const socket = io('http://localhost:5000', { auth: { token: user?.token } });
 
   const token = getToken();
   const router = useRouter();
@@ -370,7 +393,10 @@ export default function UserInfoHeader() {
   }
 
   const handleContactAction = (phone: string, id) => {
-    if (userStatus[phone]) router.push(`/chat/pv/${id}`);
+    if (userStatus[phone]) {
+      router.push(`/chat/pv/${id}`);
+      socket.emit('join_room', id);
+    }
   };
 
   const generateSMSLink = (phone, username) => {
