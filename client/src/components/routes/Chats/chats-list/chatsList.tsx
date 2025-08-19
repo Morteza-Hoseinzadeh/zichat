@@ -123,7 +123,7 @@ export default function ChatsList() {
           <CustomTabPanel key={tabIndex} value={value} index={tabIndex}>
             <motion.div variants={itemVariants}>
               <ZichatNewsPinned handleGetChatData={handleGetChatData} />
-              {chatListData?.data?.list
+              {mock
                 // .filter((chat) => chat.type === tabTypes[tabIndex])
                 .map((chat, index) => (
                   <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>

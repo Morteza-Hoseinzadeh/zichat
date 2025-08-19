@@ -2,12 +2,9 @@ const socketMap = new Map(); // userId -> socket
 
 module.exports = function socketHandler(io) {
   io.on('connection', (socket) => {
-    console.log('New connection:', socket.id);
-
     // Register user
     socket.on('register_user', (userId) => {
       const userIdStr = String(userId);
-      console.log(`Registering user: ${userIdStr}`);
 
       if (!socketMap.has(userIdStr)) {
         socketMap.set(userIdStr, new Set());

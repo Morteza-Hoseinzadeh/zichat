@@ -102,30 +102,30 @@ router.get('/list', verifyToken, async (req, res) => {
 
     const query_text = `
       SELECT 
-      room.id as room_id,
-      CASE 
-          WHEN room.user1_id = ? THEN room.user2_id
-          ELSE room.user1_id
-      END as other_user_id,
-      other_user.username as other_username,
-      other_user.profile_picture as other_profile_picture,
-      other_user.status as other_user_status,
-      (SELECT content 
-       FROM zichat.private_messages 
-       WHERE room_id = room.id 
-       ORDER BY created_at DESC 
-       LIMIT 1) as last_message,
-      (SELECT created_at 
-       FROM zichat.private_messages 
-       WHERE room_id = room.id 
-       ORDER BY created_at DESC 
-       LIMIT 1) as last_message_time,
-      (SELECT COUNT(*) 
-       FROM zichat.message_read_status ms 
-       INNER JOIN zichat.private_messages pm ON ms.message_id = pm.chat_id
-       WHERE pm.room_id = room.id 
-       AND ms.user_id = '2efc1555-9fab-416e-9fa3-24b668ac670c'
-       AND ms.is_read = 0) as unread_count
+        room.id as room_id,
+        CASE 
+            WHEN room.user1_id = ? THEN room.user2_id
+            ELSE room.user1_id
+        END as other_user_id,
+        other_user.username as other_username,
+        other_user.profile_picture as other_profile_picture,
+        other_user.status as other_user_status,
+        (SELECT content 
+         FROM zichat.private_messages 
+         WHERE room_id = room.id 
+         ORDER BY created_at DESC 
+         LIMIT 1) as last_message,
+        (SELECT created_at 
+         FROM zichat.private_messages 
+         WHERE room_id = room.id 
+         ORDER BY created_at DESC 
+         LIMIT 1) as last_message_time,
+        (SELECT COUNT(*) 
+         FROM zichat.message_read_status ms 
+         INNER JOIN zichat.private_messages pm ON ms.message_id = pm.chat_id
+         WHERE pm.room_id = room.id 
+         AND ms.user_id = ?
+         AND ms.is_read = 0) as unread_count
       FROM zichat.private_rooms room
       INNER JOIN zichat.users other_user ON (
           other_user.user_id = CASE 
@@ -135,10 +135,14 @@ router.get('/list', verifyToken, async (req, res) => {
       )
       WHERE room.user1_id = ? 
          OR room.user2_id = ?
-      ORDER BY last_message_time DESC;
+      ORDER BY COALESCE(last_message_time, room.created_at) DESC;
     `;
 
-    const [chats] = await query(query_text, [user_id, user_id, user_id, user_id]);
+    // روش صحیح دریافت نتیجه
+    const results = await query(query_text, [user_id, user_id, user_id, user_id, user_id]);
+
+    // بسته به نوع درایور، ممکنه results آرایه‌ای از نتایج باشه
+    const chats = Array.isArray(results) ? results : results[0] || [];
 
     res.json({ status: 200, data: { type: 'private', list: chats } });
   } catch (error) {
