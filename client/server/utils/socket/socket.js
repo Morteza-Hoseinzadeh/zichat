@@ -9,17 +9,13 @@ module.exports = function socketHandler(io) {
       const userIdStr = String(userId);
       console.log(`Registering user: ${userIdStr}`);
 
-      // Join user's personal room for private messages
-      socket.join(`user_${userIdStr}`);
-
-      // Store socket in map
-      socketMap.set(userIdStr, socket);
+      if (!socketMap.has(userIdStr)) {
+        socketMap.set(userIdStr, new Set());
+      }
+      socketMap.get(userIdStr).add(socket);
 
       // Notify others this user came online
-      socket.broadcast.emit('user_status', {
-        userId: userIdStr,
-        isOnline: true,
-      });
+      socket.broadcast.emit('user_online', userIdStr);
     });
 
     // Join a chat room
