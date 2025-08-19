@@ -100,7 +100,7 @@ router.get('/list', verifyToken, async (req, res) => {
   try {
     const { user_id } = req.user;
 
-    const query = `
+    const query_text = `
       SELECT 
       room.id as room_id,
       CASE 
@@ -138,7 +138,7 @@ router.get('/list', verifyToken, async (req, res) => {
       ORDER BY last_message_time DESC;
     `;
 
-    const [chats] = await connection.promise().query(query, [user_id, user_id, user_id, user_id]);
+    const [chats] = await query(query_text, [user_id, user_id, user_id, user_id]);
 
     res.json({ status: 200, data: { type: 'private', list: chats } });
   } catch (error) {
