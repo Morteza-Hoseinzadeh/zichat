@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import { useRouter } from 'next/navigation';
 import { Typography, Box, Tabs, Tab } from '@mui/material';
@@ -8,6 +8,9 @@ import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
 import { TbBroadcast, TbRobot, TbUser, TbUsers } from 'react-icons/tb';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/utils/contexts/AuthContext';
+import useGet from '@/utils/hooks/API/useGet';
+import axiosInstance from '@/utils/hooks/axiosInstance';
+import { getToken } from '@/utils/functions/auth/service';
 
 const mock = [];
 
@@ -17,7 +20,7 @@ interface TabPanelProps {
   value: number;
 }
 
-const tabTypes = ['user', 'group', 'channel', 'bot'];
+const tabTypes = ['private', 'group', 'channel', 'bot'];
 
 const ZichatNewsPinned = ({ handleGetChatData }: { handleGetChatData: (chat_id: string | number) => void }) => (
   <Box onClick={() => handleGetChatData('xyz-abcd-efg')} sx={{ ...styles.chats_container, p: 2, mb: 1, border: '2px dashed', borderColor: 'secondary.main', borderRadius: '12px' }}>
@@ -67,23 +70,29 @@ function a11yProps(index: number) {
 }
 
 export default function ChatsList() {
-  const socketRef = useRef(null);
   const { user } = useAuth();
+
+  const router = useRouter();
+  const socketRef = useRef(null);
+
+  const [value, setValue] = React.useState(0);
+
+  const { data: chatListApi, loading: chatListLoadingApi, refetch: chatListRefetchApi } = useGet('/api/chat/list');
+  const chatListData = useMemo<any>(() => chatListApi || [], [chatListApi]);
+
+  console.log(chatListData);
 
   useEffect(() => {
     socketRef.current = io('http://localhost:5000');
 
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('register_user', user?.user_id); // replace with user_id api call
+      socketRef.current.emit('register_user', user?.user_id);
     });
 
     return () => {
       socketRef.current.disconnect();
     };
   }, []);
-
-  const [value, setValue] = React.useState(0);
-  const router = useRouter();
 
   const handleGetChatData = (chat_id: string | number) => {
     router.push(`/chat/pv/${chat_id}`);
@@ -114,16 +123,16 @@ export default function ChatsList() {
           <CustomTabPanel key={tabIndex} value={value} index={tabIndex}>
             <motion.div variants={itemVariants}>
               <ZichatNewsPinned handleGetChatData={handleGetChatData} />
-              {mock
-                .filter((chat) => chat.type === tabTypes[tabIndex])
+              {chatListData?.data?.list
+                // .filter((chat) => chat.type === tabTypes[tabIndex])
                 .map((chat, index) => (
                   <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
-                    <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.id)}>
-                      <Box component="img" src={chat.avatar} alt={chat.name} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
+                    <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.user_id)}>
+                      <Box component="img" src={chat.profile_picture} alt={chat.username} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
                       <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
                         <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
                           <Typography variant="h6" color="text.primary" fontWeight={900}>
-                            {chat.name}
+                            {chat.username}
                           </Typography>
                           <Typography variant="body2" color="text.primary">
                             {ConvertToPersianDigit(chat.timestamp)}
