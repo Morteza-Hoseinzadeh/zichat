@@ -1,26 +1,20 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-
 import { useParams, useRouter } from 'next/navigation';
-
 import { Box, IconButton, Menu, MenuItem, Typography, useTheme } from '@mui/material';
-
 import { motion, AnimatePresence } from 'framer-motion';
-
 import ConvertToPersianDigit from '@/utils/functions/convertToPersianDigit';
-
 import { TbSearch, TbTrash, TbX, TbArrowRight, TbDots, TbEdit, TbMicrophone, TbPlus, TbSend2, TbSticker, TbCopy, TbArrowForward } from 'react-icons/tb';
 import { RiCheckDoubleLine } from 'react-icons/ri';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import { IoPersonSharp } from 'react-icons/io5';
 import { MdNotificationsOff, MdReply } from 'react-icons/md';
 import { TbPhoto, TbMapPin, TbChartBar, TbAddressBook, TbFile } from 'react-icons/tb';
-
 import CustomSnackbar from '@/components/custom/CustomSnackbar';
-import useGet from '@/utils/hooks/API/useGet';
 import { useAuth } from '@/utils/contexts/AuthContext';
 import axiosInstance from '@/utils/hooks/axiosInstance';
+import io from 'socket.io-client';
 
 const pageVariants: any = {
   initial: { y: '100%', opacity: 0 },
@@ -39,17 +33,17 @@ const pageVariants: any = {
 function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRoomPvData: any }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
   const room_info = privateRoomPvData?.data?.room_info;
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+
   const handleClose = () => {
     setAnchorEl(null);
   };
 
-  const status = { label: 'آنلاین', color: 'secondary.main' };
+  const status = room_info?.other_user?.status === 'online' ? { label: 'آنلاین', color: 'secondary.main' } : { label: 'آفلاین', color: 'text.disabled' };
 
   return (
     <Box sx={styles.header}>
@@ -77,29 +71,23 @@ function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRo
           </IconButton>
         </Box>
         <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleClose}>
             <IoPersonSharp />
             اطلاعات مخاطب
           </MenuItem>
-          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleClose}>
             <MdNotificationsOff />
             بی‌صدا کردن
           </MenuItem>
-          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleClose}>
             <TbSearch />
             جستجو در گفتگو
           </MenuItem>
-          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleClose()}>
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleClose}>
             <TbTrash />
             پاک کردن گفتگو
           </MenuItem>
-          <MenuItem
-            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-            onClick={() => {
-              handleClose();
-              onClose();
-            }}
-          >
+          <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={onClose}>
             <TbX />
             بستن گفتگو
           </MenuItem>
@@ -109,7 +97,7 @@ function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRo
   );
 }
 
-function Keyboard() {
+function Keyboard({ onSendMessage, roomId }: { onSendMessage: (message: string) => void; roomId: string }) {
   const theme = useTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState('');
@@ -130,6 +118,23 @@ function Keyboard() {
     }
   }, [input]);
 
+  const handleSend = () => {
+    if (input.trim() !== '') {
+      onSendMessage(input.trim());
+      setInput('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   const menuItems = [
     { label: 'گالری', icon: <TbPhoto size={20} />, function: () => console.log('TbPhoto') },
     { label: 'موقعیت مکانی', icon: <TbMapPin size={20} />, function: () => console.log('TbMapPin') },
@@ -149,11 +154,13 @@ function Keyboard() {
   return (
     <Box sx={{ position: 'relative', ...styles.input_container }}>
       <Box>
-        <IconButton sx={{ mr: '8px' }}>{showButton ? <TbSend2 color={theme.palette.text.primary} size={24} /> : <TbMicrophone color={theme.palette.text.primary} size={24} />}</IconButton>
+        <IconButton sx={{ mr: '8px' }} onClick={showButton ? handleSend : undefined}>
+          {showButton ? <TbSend2 color={theme.palette.text.primary} size={24} /> : <TbMicrophone color={theme.palette.text.primary} size={24} />}
+        </IconButton>
       </Box>
 
       <Box position="relative" width="100%" mt={1}>
-        <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={({ target }) => setInput(target.value)} />
+        <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={({ target }) => setInput(target.value)} onKeyPress={handleKeyPress} />
         <Box position="absolute" top={0.5} left={7}>
           <IconButton>
             <TbSticker size={27} color={theme.palette.text.primary} />
@@ -195,17 +202,24 @@ function Keyboard() {
   );
 }
 
-function ChatsSection({ privateRoomPvData }) {
+function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef }) {
   const { user } = useAuth();
-
   const theme = useTheme();
-
   const [hovered, setHovered] = useState<string | null>(null);
-
   const [showSnackbar, setShowSnackbar] = useState(false);
-
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Mark messages as read when they come into view
+  useEffect(() => {
+    if (privateRoomPvData?.data?.messages) {
+      privateRoomPvData.data.messages.forEach((msg) => {
+        if (!msg.is_read && msg.sender_id !== user?.user_id) {
+          onMessageRead(msg.message_id, privateRoomPvData.data.room_info.room_id);
+        }
+      });
+    }
+  }, [privateRoomPvData, user?.user_id, onMessageRead]);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, id: string) => {
     setMenuAnchorEl(event.currentTarget);
@@ -217,131 +231,314 @@ function ChatsSection({ privateRoomPvData }) {
     setOpenMenuId(null);
   };
 
-  const handleCopyMessage = (msg: any) => {
+  const handleCopyMessage = () => {
+    const message = privateRoomPvData.data.messages.find((m) => m.message_id === openMenuId);
+    if (message) {
+      navigator.clipboard.writeText(message.content);
+      setShowSnackbar(true);
+      setTimeout(() => setShowSnackbar(false), 2000);
+    }
     handleMenuClose();
-    navigator.clipboard.writeText(msg.message);
-    setShowSnackbar(true);
   };
 
   const fontSize = 17;
 
-  return privateRoomPvData?.data?.messages?.map((msg, index) => {
-    const isSelf = msg.sender_id === user?.user_id;
-    const isHovered = hovered === msg.message_id;
-    const color = isSelf ? theme.palette.primary.dark : theme.palette.secondary.dark;
+  // Group messages by date
+  const groupedMessages = useMemo(() => {
+    if (!privateRoomPvData?.data?.messages) return {};
 
-    // Convert message status to readable format
-    const getReadStatus = () => {
-      if (isSelf) {
-        return msg.is_read === null ? theme.palette.secondary.main : theme.palette.text.disabled;
+    return privateRoomPvData.data.messages.reduce((groups, message) => {
+      const date = new Date(message.created_at).toLocaleDateString('fa-IR');
+      if (!groups[date]) {
+        groups[date] = [];
       }
-      return theme.palette.text.disabled;
-    };
+      groups[date].push(message);
+      return groups;
+    }, {});
+  }, [privateRoomPvData]);
 
+  if (!privateRoomPvData?.data?.messages?.length) {
     return (
-      <React.Fragment key={index}>
-        <Box width="100%" sx={{ display: 'flex', justifyContent: isSelf ? 'right' : 'left', my: 3 }}>
-          <Box display="flex" alignItems="center" flexDirection={isSelf ? 'row' : 'row-reverse'} gap={1} onMouseEnter={() => setHovered(msg.message_id)} onMouseLeave={() => setHovered(null)}>
-            <Box sx={{ ...styles.chat_bubbles, backgroundColor: color, borderBottomLeftRadius: isSelf ? '24px' : '0', borderBottomRightRadius: isSelf ? '0' : '24px' }}>
-              <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
-                {msg.content}
-              </Typography>
-
-              <Box mt={0.5} display="flex" alignItems="center" justifyContent="space-between" flexDirection={isSelf ? 'row' : 'row-reverse'} mx={0.5}>
-                <p style={{ color: theme.palette.text.disabled }}>{ConvertToPersianDigit(new Date(msg.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }))}</p>
-
-                {isSelf && <RiCheckDoubleLine color={getReadStatus()} />}
-              </Box>
-
-              {msg.is_edited === 1 && (
-                <Box display="flex" alignItems="center" justifyContent={isSelf ? 'left' : 'right'} color={theme.palette.text.disabled} fontSize={fontSize - 4} gap={0.5}>
-                  <span>ویرایش شده</span>
-                  <TbEdit />
-                </Box>
-              )}
-            </Box>
-
-            {isHovered && (
-              <Box display="flex" flexDirection="column" alignItems="center">
-                <IconButton onClick={(e) => handleMenuClick(e, msg.message_id)}>
-                  <RxHamburgerMenu size={26} />
-                </IconButton>
-                <IconButton>
-                  <TbEdit size={26} />
-                </IconButton>
-              </Box>
-            )}
-
-            <Menu anchorEl={menuAnchorEl} open={openMenuId === msg.message_id} onClose={handleMenuClose}>
-              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                <MdReply />
-                پاسخ
-              </MenuItem>
-              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleCopyMessage(msg.content)}>
-                <TbCopy />
-                کپی
-              </MenuItem>
-              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                <TbEdit />
-                ویرایش
-              </MenuItem>
-              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                <TbTrash />
-                حذف
-              </MenuItem>
-              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                <TbArrowForward />
-                فوروارد
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Box>
-        {showSnackbar && (
-          <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="success">
-            <span>پیام کپی شد!</span>
-          </CustomSnackbar>
-        )}
-      </React.Fragment>
+      <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
+        <Typography variant="h6" color="text.secondary">
+          هیچ پیامی وجود ندارد
+        </Typography>
+      </Box>
     );
-  });
+  }
+
+  return (
+    <Box mx={1}>
+      {Object.entries(groupedMessages).map(([date, messages]: any) => (
+        <React.Fragment key={date}>
+          <Box display="flex" justifyContent="center" my={2}>
+            <Typography variant="body2" color="text.disabled" sx={{ backgroundColor: 'background.paper', px: 2, py: 0.5, borderRadius: 2 }}>
+              {ConvertToPersianDigit(date)}
+            </Typography>
+          </Box>
+
+          {messages?.map((msg, index) => {
+            const isSelf = msg.sender_id === user?.user_id;
+            const isHovered = hovered === msg.message_id;
+            const color = isSelf ? theme.palette.primary.dark : theme.palette.secondary.dark;
+            const isLastMessage = index === messages.length - 1;
+
+            const getReadStatus = () => {
+              if (isSelf) {
+                return msg.is_read ? theme.palette.secondary.main : theme.palette.text.disabled;
+              }
+              return theme.palette.text.disabled;
+            };
+
+            return (
+              <Box key={msg.message_id || index} ref={isLastMessage ? lastChatRef : null} width="100%" overflow={'auto'} sx={{ display: 'flex', justifyContent: isSelf ? 'flex-start' : 'flex-end', mb: 3, mt: 1 }}>
+                <Box display="flex" alignItems="center" flexDirection={isSelf ? 'row' : 'row-reverse'} gap={1} onMouseEnter={() => setHovered(msg.message_id)} onMouseLeave={() => setHovered(null)}>
+                  <Box sx={{ ...styles.chat_bubbles, backgroundColor: color, borderBottomLeftRadius: isSelf ? '24px' : '4px', borderBottomRightRadius: isSelf ? '4px' : '24px' }}>
+                    <Box>
+                      <Typography variant="body1" sx={{ color: theme.palette.text.primary, wordBreak: 'break-word' }}>
+                        {msg.content}
+                      </Typography>
+                    </Box>
+
+                    <Box mt={0.5} display="flex" alignItems="center" justifyContent="space-between" gap={1}>
+                      <Typography variant="caption" color="text.disabled">
+                        {ConvertToPersianDigit(new Date(msg.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }))}
+                      </Typography>
+
+                      {isSelf && <RiCheckDoubleLine color={getReadStatus()} size={16} />}
+                    </Box>
+
+                    {msg.is_edited === 1 && (
+                      <Box display="flex" alignItems="center" justifyContent={isSelf ? 'flex-start' : 'flex-end'} color={theme.palette.text.disabled} fontSize={fontSize - 4} gap={0.5} mt={0.5}>
+                        <span>ویرایش شده</span>
+                        <TbEdit size={14} />
+                      </Box>
+                    )}
+                  </Box>
+
+                  {isHovered && (
+                    <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+                      <IconButton size="medium" onClick={(e) => handleMenuClick(e, msg.message_id)}>
+                        <RxHamburgerMenu size={22} />
+                      </IconButton>
+                      <IconButton size="medium">
+                        <TbEdit size={22} />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            );
+          })}
+        </React.Fragment>
+      ))}
+
+      <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose}>
+        <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleMenuClose}>
+          <MdReply />
+          پاسخ
+        </MenuItem>
+        <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleCopyMessage}>
+          <TbCopy />
+          کپی
+        </MenuItem>
+        <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleMenuClose}>
+          <TbEdit />
+          ویرایش
+        </MenuItem>
+        <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleMenuClose}>
+          <TbTrash />
+          حذف
+        </MenuItem>
+        <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleMenuClose}>
+          <TbArrowForward />
+          فوروارد
+        </MenuItem>
+      </Menu>
+
+      <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="success" autoHideDuration={2000}>
+        <span>پیام کپی شد!</span>
+      </CustomSnackbar>
+    </Box>
+  );
 }
 
 export default function ChatView() {
   const { id } = useParams();
   const router = useRouter();
   const [show, setShow] = useState(true);
+  const [privateRoomPvData, setPrivateRoomPvData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [privateRoomPvData, setPrivateRoomPvData] = useState([]);
+  const lastChatRef = useRef(null);
+  const socketRef = useRef(null);
+
+  // Initialize socket connection
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+    socketRef.current = io(url);
+
+    socketRef.current.on('connect', () => {
+      console.log('Connected to chat server');
+      if (id) {
+        socketRef.current.emit('join_room', id);
+      }
+    });
+
+    socketRef.current.on('receive_message', (messageData) => {
+      if (messageData.room_id === id) {
+        setPrivateRoomPvData((prev) => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            messages: [...(prev.data?.messages || []), messageData],
+          },
+        }));
+      }
+    });
+
+    socketRef.current.on('private_message', (messageData) => {
+      if (messageData.room_id === id) {
+        setPrivateRoomPvData((prev) => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            messages: [...(prev.data?.messages || []), messageData],
+          },
+        }));
+      }
+    });
+
+    socketRef.current.on('message_read_receipt', (receiptData) => {
+      if (receiptData.room_id === id) {
+        setPrivateRoomPvData((prev) => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            messages: prev.data.messages.map((msg) => (msg.message_id === receiptData.message_id ? { ...msg, is_read: true, read_at: receiptData.read_at } : msg)),
+          },
+        }));
+      }
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('receive_message');
+        socketRef.current.off('private_message');
+        socketRef.current.off('message_read_receipt');
+        socketRef.current.disconnect();
+      }
+    };
+  }, [id]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (lastChatRef.current && privateRoomPvData?.data?.messages) {
+      lastChatRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [privateRoomPvData?.data?.messages]);
 
   const handleClose = () => {
     setShow(false);
     setTimeout(() => router.push('/'), 150);
   };
 
-  async function handleGetChatData() {
+  const handleGetChatData = async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get(`/api/chat/private-messages/${id}`);
-      return setPrivateRoomPvData(response?.data);
+
+      if (response.data && response.data.data) {
+        setPrivateRoomPvData(response.data);
+      } else if (response.data && Array.isArray(response.data.messages)) {
+        setPrivateRoomPvData({ data: response.data });
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
-      console.log(error);
+      console.error('Error fetching chat data:', error);
+      setPrivateRoomPvData(null);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  const handleSendMessage = async (messageContent: string) => {
+    if (!id || !socketRef.current) return;
+    try {
+      const response = await axiosInstance.post('/api/chat/private-messages', { roomId: id, content: messageContent });
+
+      const messageData = response.data.data || response.data;
+
+      socketRef.current.emit('send_message', messageData);
+
+      setPrivateRoomPvData((prev) => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          messages: [...prev.data.messages, messageData],
+        },
+      }));
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
+  const handleMessageRead = async (messageId: string, roomId: string) => {
+    try {
+      await axiosInstance.post('/api/chat/message-read', {
+        message_id: messageId,
+        room_id: roomId,
+      });
+
+      setPrivateRoomPvData((prev) => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          messages: prev.data.messages.map((msg) => (msg.message_id === messageId ? { ...msg, is_read: true, read_at: new Date().toISOString() } : msg)),
+        },
+      }));
+
+      if (socketRef.current) {
+        socketRef.current.emit('message_read', {
+          message_id: messageId,
+          room_id: roomId,
+        });
+      }
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  };
 
   useEffect(() => {
-    handleGetChatData();
+    if (id) handleGetChatData();
   }, [id]);
 
-  if (!privateRoomPvData) return null;
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography>در حال بارگذاری...</Typography>
+      </Box>
+    );
+  }
+
+  if (!privateRoomPvData) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography>خطا در بارگذاری چت</Typography>
+      </Box>
+    );
+  }
 
   return (
     <AnimatePresence>
       {show && (
         <motion.div key="chatView" initial="initial" animate="animate" exit="exit" variants={pageVariants} style={styles.overlay}>
           <Header onClose={handleClose} privateRoomPvData={privateRoomPvData} />
-          <Box mx={1}>
-            <ChatsSection privateRoomPvData={privateRoomPvData} />
+          <Box mb={12}>
+            <ChatsSection privateRoomPvData={privateRoomPvData} onMessageRead={handleMessageRead} lastChatRef={lastChatRef} />
           </Box>
-          <Keyboard />
+          <Keyboard onSendMessage={handleSendMessage} roomId={id as string} />
         </motion.div>
       )}
     </AnimatePresence>

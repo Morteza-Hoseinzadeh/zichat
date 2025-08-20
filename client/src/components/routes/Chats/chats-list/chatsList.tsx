@@ -9,11 +9,7 @@ import { TbBroadcast, TbRobot, TbUser, TbUsers } from 'react-icons/tb';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/utils/contexts/AuthContext';
 import useGet from '@/utils/hooks/API/useGet';
-import axiosInstance from '@/utils/hooks/axiosInstance';
-import { getToken } from '@/utils/functions/auth/service';
 import { RiCheckDoubleLine } from 'react-icons/ri';
-
-const mock = [];
 
 interface TabPanelProps {
   children?: React.ReactNode;

@@ -63,38 +63,6 @@ router.get('/contacts', verifyToken, async (req, res) => {
   }
 });
 
-// Send a message to a room
-router.post('/send', verifyToken, (req, res) => {
-  const { room, message, senderId } = req.body;
-  const io = req.app.get('io');
-
-  io.to(room).emit('receive_message', { senderId, message });
-  res.json({ status: 'sent' });
-});
-
-// Edit a message (emit event)
-router.put('/edit', verifyToken, (req, res) => {
-  const { messageId, newContent, room } = req.body;
-  const io = req.app.get('io');
-
-  io.to(room).emit('edit_message', { messageId, newContent });
-  res.json({ status: 'edited' });
-});
-
-// Join a room (force user socket to join)
-router.post('/join-room', verifyToken, (req, res) => {
-  const { userId, room } = req.body;
-  const socketMap = req.app.get('socketMap');
-
-  const socket = socketMap.get(userId);
-  if (socket) {
-    socket.join(room);
-    res.json({ status: 'joined', room });
-  } else {
-    res.status(404).json({ error: 'User is offline' });
-  }
-});
-
 // Get user's private chat list
 router.get('/conversations', verifyToken, async (req, res) => {
   try {
@@ -221,46 +189,73 @@ router.post('/private-messages', verifyToken, async (req, res) => {
     const { user_id } = req.user;
     const { roomId, content } = req.body;
 
-    // Verify user has access to this room
-    const [room] = await connection.promise().query('SELECT id FROM private_rooms WHERE id = ? AND (user1_id = ? OR user2_id = ?)', [roomId, user_id, user_id]);
+    if (!roomId || !content) {
+      return res.status(400).json({ error: 'Room ID and content are required' });
+    }
+
+    // Verify user has access to this room and get participants
+    const [room] = await connection.promise().query('SELECT user1_id, user2_id FROM private_rooms WHERE id = ? AND (user1_id = ? OR user2_id = ?)', [roomId, user_id, user_id]);
 
     if (room.length === 0) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Insert message
-    const [result] = await connection.promise().query('INSERT INTO private_messages (chat_id, room_id, sender_id, content) VALUES (?, ?, ?, ?)', [uuidv4(), roomId, user_id, content]);
+    const otherUserId = room[0].user1_id === user_id ? room[0].user2_id : room[0].user1_id;
+    const chatId = uuidv4();
+    const currentTime = new Date();
 
-    // Get the full message with sender info
+    // Insert message
+    const [insertResult] = await connection.promise().query('INSERT INTO private_messages (chat_id, room_id, sender_id, content, edited, created_at) VALUES (?, ?, ?, ?, ?, ?)', [chatId, roomId, user_id, content, 0, currentTime]);
+
+    if (insertResult.affectedRows === 0) {
+      return res.status(500).json({ error: 'Failed to insert message' });
+    }
+
+    // Get the inserted message
     const [messages] = await connection.promise().query(
       `
       SELECT 
-        m.*, 
-        u.username as sender_name,
-        u.profile_picture as sender_avatar
-      FROM private_messages m
-      JOIN users u ON m.sender_id = u.user_id
-      WHERE m.id = ?
-    `,
-      [result.insertId]
+        pm.chat_id as message_id,
+        pm.room_id,
+        pm.sender_id,
+        pm.content,
+        pm.edited as is_edited,
+        pm.created_at,
+        pm.updated_at,
+        u.username as sender_username,
+        u.profile_picture as sender_avatar,
+        u.status as sender_status
+      FROM private_messages pm
+      JOIN users u ON pm.sender_id = u.user_id
+      WHERE pm.chat_id = ?
+      `,
+      [chatId]
     );
+
+    if (messages.length === 0) {
+      return res.status(404).json({ error: 'Message not found after insertion' });
+    }
 
     const message = messages[0];
 
-    // Get the other participant in this private chat
-    const [participants] = await connection.promise().query('SELECT user1_id, user2_id FROM private_rooms WHERE id = ?', [roomId]);
-
-    const otherUserId = participants[0].user1_id === user_id ? participants[0].user2_id : participants[0].user1_id;
-
     // Emit socket event
     const io = req.app.get('io');
-    io.to(`user_${otherUserId}`).emit('private_message', message);
-    io.to(`room_${roomId}`).emit('private_message', message);
+    if (io) {
+      io.to(`${otherUserId}`).emit('private_message', message);
+      io.to(`room_${roomId}`).emit('private_message', message);
+    }
 
-    res.json(message);
+    res.json({
+      status: 200,
+      message: 'Message sent successfully',
+      data: message,
+    });
   } catch (error) {
     console.error('Error sending private message:', error);
-    res.status(500).json({ error: 'Failed to send message' });
+    res.status(500).json({
+      error: 'Failed to send message',
+      message: error.message,
+    });
   }
 });
 
@@ -379,6 +374,215 @@ router.get('/private-messages/:roomId', verifyToken, async (req, res) => {
     console.error('Error fetching private messages:', error);
     res.status(500).json({
       error: 'Failed to fetch messages',
+      message: error.message,
+    });
+  }
+});
+
+// Mark message as read
+router.post('/message-read', verifyToken, async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { message_id, room_id } = req.body;
+
+    if (!message_id || !room_id) {
+      return res.status(400).json({ error: 'Message ID and Room ID are required' });
+    }
+
+    // Verify user has access to this room
+    const [room] = await connection.promise().query('SELECT id FROM private_rooms WHERE id = ? AND (user1_id = ? OR user2_id = ?)', [room_id, user_id, user_id]);
+
+    if (room.length === 0) {
+      return res.status(403).json({ error: 'Access denied to this conversation' });
+    }
+
+    // Verify message exists in this room
+    const [message] = await connection.promise().query('SELECT chat_id FROM private_messages WHERE chat_id = ? AND room_id = ?', [message_id, room_id]);
+
+    if (message.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    // Update message read status
+    const [result] = await connection.promise().query(
+      `INSERT INTO message_read_status (message_id, user_id, is_read, read_at) 
+       VALUES (?, ?, TRUE, NOW()) 
+       ON DUPLICATE KEY UPDATE is_read = TRUE, read_at = NOW()`,
+      [message_id, user_id]
+    );
+
+    // Get the other participant in this private chat
+    const [participants] = await connection.promise().query('SELECT user1_id, user2_id FROM private_rooms WHERE id = ?', [room_id]);
+
+    const otherUserId = participants[0].user1_id === user_id ? participants[0].user2_id : participants[0].user1_id;
+
+    // Prepare read receipt data
+    const readReceipt = {
+      message_id: message_id,
+      room_id: room_id,
+      reader_id: user_id,
+      read_at: new Date(),
+    };
+
+    // Emit socket event to notify the sender
+    const io = req.app.get('io');
+    io.to(`user_${otherUserId}`).emit('message_read_receipt', readReceipt);
+    io.to(`room_${room_id}`).emit('message_read_receipt', readReceipt);
+
+    res.json({
+      status: 200,
+      message: 'Message marked as read',
+      data: readReceipt,
+    });
+  } catch (error) {
+    console.error('Error marking message as read:', error);
+    res.status(500).json({
+      error: 'Failed to mark message as read',
+      message: error.message,
+    });
+  }
+});
+
+// Mark multiple messages as read
+router.post('/messages-read', verifyToken, async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { message_ids, room_id } = req.body;
+
+    if (!message_ids || !Array.isArray(message_ids) || message_ids.length === 0 || !room_id) {
+      return res.status(400).json({ error: 'Message IDs array and Room ID are required' });
+    }
+
+    // Verify user has access to this room
+    const [room] = await connection.promise().query('SELECT id FROM private_rooms WHERE id = ? AND (user1_id = ? OR user2_id = ?)', [room_id, user_id, user_id]);
+
+    if (room.length === 0) {
+      return res.status(403).json({ error: 'Access denied to this conversation' });
+    }
+
+    // Verify messages exist in this room
+    const placeholders = message_ids.map(() => '?').join(',');
+    const [messages] = await connection.promise().query(
+      `SELECT chat_id FROM private_messages 
+       WHERE chat_id IN (${placeholders}) AND room_id = ?`,
+      [...message_ids, room_id]
+    );
+
+    if (messages.length !== message_ids.length) {
+      return res.status(404).json({ error: 'Some messages not found' });
+    }
+
+    // Update multiple messages read status
+    const updatePromises = message_ids.map((message_id) =>
+      connection.promise().query(
+        `INSERT INTO message_read_status (message_id, user_id, is_read, read_at) 
+         VALUES (?, ?, TRUE, NOW()) 
+         ON DUPLICATE KEY UPDATE is_read = TRUE, read_at = NOW()`,
+        [message_id, user_id]
+      )
+    );
+
+    await Promise.all(updatePromises);
+
+    // Get the other participant
+    const [participants] = await connection.promise().query('SELECT user1_id, user2_id FROM private_rooms WHERE id = ?', [room_id]);
+
+    const otherUserId = participants[0].user1_id === user_id ? participants[0].user2_id : participants[0].user1_id;
+
+    // Prepare read receipts
+    const readReceipts = message_ids.map((message_id) => ({
+      message_id: message_id,
+      room_id: room_id,
+      reader_id: user_id,
+      read_at: new Date(),
+    }));
+
+    // Emit socket events
+    const io = req.app.get('io');
+    readReceipts.forEach((receipt) => {
+      io.to(`user_${otherUserId}`).emit('message_read_receipt', receipt);
+      io.to(`room_${room_id}`).emit('message_read_receipt', receipt);
+    });
+
+    res.json({
+      status: 200,
+      message: 'Messages marked as read',
+      data: {
+        count: message_ids.length,
+        receipts: readReceipts,
+      },
+    });
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({
+      error: 'Failed to mark messages as read',
+      message: error.message,
+    });
+  }
+});
+
+// Get read status for multiple messages
+router.get('/messages-read-status', verifyToken, async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { message_ids } = req.query;
+
+    if (!message_ids) {
+      return res.status(400).json({ error: 'Message IDs are required' });
+    }
+
+    const messageIdsArray = Array.isArray(message_ids) ? message_ids : [message_ids];
+
+    const placeholders = messageIdsArray.map(() => '?').join(',');
+    const [readStatus] = await connection.promise().query(
+      `SELECT message_id, user_id, is_read, read_at 
+       FROM message_read_status 
+       WHERE message_id IN (${placeholders}) AND user_id = ?`,
+      [...messageIdsArray, user_id]
+    );
+
+    res.json({
+      status: 200,
+      data: readStatus,
+    });
+  } catch (error) {
+    console.error('Error fetching read status:', error);
+    res.status(500).json({
+      error: 'Failed to fetch read status',
+      message: error.message,
+    });
+  }
+});
+
+// Get unread messages count for a room
+router.get('/unread-count/:roomId', verifyToken, async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { roomId } = req.params;
+
+    // Verify user has access to this room
+    const [room] = await connection.promise().query('SELECT id FROM private_rooms WHERE id = ? AND (user1_id = ? OR user2_id = ?)', [roomId, user_id, user_id]);
+
+    if (room.length === 0) {
+      return res.status(403).json({ error: 'Access denied to this conversation' });
+    }
+
+    const [unreadCount] = await connection.promise().query(
+      `SELECT COUNT(*) as count 
+       FROM private_messages pm
+       LEFT JOIN message_read_status mrs ON pm.chat_id = mrs.message_id AND mrs.user_id = ?
+       WHERE pm.room_id = ? AND pm.sender_id != ? AND (mrs.is_read IS NULL OR mrs.is_read = 0)`,
+      [user_id, roomId, user_id]
+    );
+
+    res.json({
+      status: 200,
+      data: { room_id: roomId, unread_count: unreadCount[0].count },
+    });
+  } catch (error) {
+    console.error('Error fetching unread count:', error);
+    res.status(500).json({
+      error: 'Failed to fetch unread count',
       message: error.message,
     });
   }
