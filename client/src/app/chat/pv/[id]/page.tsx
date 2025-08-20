@@ -30,7 +30,7 @@ const pageVariants: any = {
   },
 };
 
-function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRoomPvData: any }) {
+function Header({ onClose, privateRoomPvData, onlineStatus, isTyping }: any) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const room_info = privateRoomPvData?.data?.room_info;
@@ -43,7 +43,17 @@ function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRo
     setAnchorEl(null);
   };
 
-  const status = room_info?.other_user?.status === 'online' ? { label: 'آنلاین', color: 'secondary.main' } : { label: 'آفلاین', color: 'text.disabled' };
+  // Get status from onlineStatus or fallback to room_info
+  const userStatus = onlineStatus[room_info?.other_user?.user_id] || { status: room_info?.other_user?.status || 'offline' };
+
+  const statusConfig = {
+    online: { label: 'آنلاین', color: 'secondary.main' },
+    offline: { label: 'آفلاین', color: 'text.disabled' },
+    typing: { label: 'در حال تایپ...', color: 'primary.main' },
+  };
+
+  const currentStatus = isTyping ? 'typing' : userStatus.status;
+  const status = statusConfig[currentStatus] || statusConfig.offline;
 
   return (
     <Box sx={styles.header}>
@@ -58,12 +68,13 @@ function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRo
           </Typography>
           <Box display="flex" alignItems="center" gap={0.5}>
             <Box sx={{ backgroundColor: status.color, width: 12, height: 12, borderRadius: '50%' }} />
-            <Typography variant="body1" color="text.disabled">
+            <Typography variant="body1" color={status.color}>
               {status.label}
             </Typography>
           </Box>
         </Box>
       </Box>
+
       <Box display="flex" alignItems="center">
         <Box sx={{ transform: 'rotate(90deg)' }}>
           <IconButton onClick={handleMenuClick}>
@@ -97,13 +108,14 @@ function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRo
   );
 }
 
-function Keyboard({ onSendMessage, roomId }: { onSendMessage: (message: string) => void; roomId: string }) {
+function Keyboard({ onSendMessage, roomId, onTypingChange }: { onSendMessage: (message: string) => void; roomId: string; onTypingChange: (typing: boolean) => void }) {
   const theme = useTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState('');
   const [showButton, setShowButton] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     setShowButton(input.trim() !== '');
@@ -118,12 +130,48 @@ function Keyboard({ onSendMessage, roomId }: { onSendMessage: (message: string) 
     }
   }, [input]);
 
+  // Handle typing indicators
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+
+    // Send typing start/stop events
+    if (value.trim() !== '' && onTypingChange) {
+      onTypingChange(true);
+
+      // Clear previous timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Set timeout to stop typing indicator
+      typingTimeoutRef.current = setTimeout(() => {
+        if (onTypingChange) {
+          onTypingChange(false);
+        }
+      }, 1000);
+    } else if (onTypingChange) {
+      onTypingChange(false);
+    }
+  };
+
   const handleSend = () => {
     if (input.trim() !== '') {
       onSendMessage(input.trim());
       setInput('');
+
+      // Stop typing indicator when sending
+      if (onTypingChange) {
+        onTypingChange(false);
+      }
+
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
+      }
+
+      // Clear typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
       }
     }
   };
@@ -134,6 +182,15 @@ function Keyboard({ onSendMessage, roomId }: { onSendMessage: (message: string) 
       handleSend();
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const menuItems = [
     { label: 'گالری', icon: <TbPhoto size={20} />, function: () => console.log('TbPhoto') },
@@ -160,7 +217,7 @@ function Keyboard({ onSendMessage, roomId }: { onSendMessage: (message: string) 
       </Box>
 
       <Box position="relative" width="100%" mt={1}>
-        <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={({ target }) => setInput(target.value)} onKeyPress={handleKeyPress} />
+        <textarea ref={textareaRef} rows={1} placeholder="پیام خود را بنویسید" style={styles.textInput} value={input} onChange={handleInputChange} onKeyPress={handleKeyPress} />
         <Box position="absolute" top={0.5} left={7}>
           <IconButton>
             <TbSticker size={27} color={theme.palette.text.primary} />
@@ -173,16 +230,7 @@ function Keyboard({ onSendMessage, roomId }: { onSendMessage: (message: string) 
           <TbPlus size={24} />
         </IconButton>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={menuOpen}
-          onClose={handleMenuClose}
-          anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-          transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          PaperProps={{
-            sx: { borderRadius: 2, minWidth: 140, boxShadow: '0px 6px 16px rgba(0,0,0,0.15)' },
-          }}
-        >
+        <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose} anchorOrigin={{ vertical: 'top', horizontal: 'left' }} transformOrigin={{ vertical: 'bottom', horizontal: 'right' }} PaperProps={{ sx: { borderRadius: 2, minWidth: 140, boxShadow: '0px 6px 16px rgba(0,0,0,0.15)' } }}>
           {menuItems.map((item) => (
             <MenuItem
               key={item.label}
@@ -202,7 +250,7 @@ function Keyboard({ onSendMessage, roomId }: { onSendMessage: (message: string) 
   );
 }
 
-function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef }) {
+function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef, isTyping }) {
   const { user } = useAuth();
   const theme = useTheme();
   const [hovered, setHovered] = useState<string | null>(null);
@@ -333,6 +381,20 @@ function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef }) {
         </React.Fragment>
       ))}
 
+      {isTyping && (
+        <Box width="100%" sx={{ display: 'flex', justifyContent: 'flex-start', mb: 2, mt: 1 }}>
+          <Box display="flex" alignItems="center" flexDirection="row-reverse" gap={1}>
+            <Box sx={{ ...styles.chat_bubbles, backgroundColor: theme.palette.secondary.dark }}>
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <Box sx={{ width: 4, height: 4, backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
+                <Box sx={{ width: 4, height: 4, backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 1.5s infinite', animationDelay: '0.2s' }} />
+                <Box sx={{ width: 4, height: 4, backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 1.5s infinite', animationDelay: '0.4s' }} />
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
       <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose}>
         <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={handleMenuClose}>
           <MdReply />
@@ -366,12 +428,16 @@ function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef }) {
 export default function ChatView() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [show, setShow] = useState(true);
   const [privateRoomPvData, setPrivateRoomPvData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [onlineStatus, setOnlineStatus] = useState<any>({});
+  const [typingUsers, setTypingUsers] = useState<any>({});
 
   const lastChatRef = useRef(null);
   const socketRef = useRef(null);
+  const typingTimeoutRef: any = useRef(null);
 
   // Initialize socket connection
   useEffect(() => {
@@ -380,11 +446,15 @@ export default function ChatView() {
 
     socketRef.current.on('connect', () => {
       console.log('Connected to chat server');
+      if (user?.user_id) {
+        socketRef.current.emit('register_user', user.user_id);
+      }
       if (id) {
         socketRef.current.emit('join_room', id);
       }
     });
 
+    // Handle incoming messages - FIXED: Use correct event name
     socketRef.current.on('private_message', (messageData) => {
       if (messageData.room_id === id) {
         setPrivateRoomPvData((prev) => ({
@@ -397,7 +467,8 @@ export default function ChatView() {
       }
     });
 
-    socketRef.current.on('message_read_receipt', (receiptData) => {
+    // Handle message read receipts - FIXED: Use correct event name
+    socketRef.current.on('message_read', (receiptData) => {
       if (receiptData.room_id === id) {
         setPrivateRoomPvData((prev) => ({
           ...prev,
@@ -409,14 +480,61 @@ export default function ChatView() {
       }
     });
 
+    // Handle online status changes
+    socketRef.current.on('user_status_changed', (statusData) => {
+      setOnlineStatus((prev) => ({
+        ...prev,
+        [statusData.user_id]: {
+          status: statusData.status,
+          lastSeen: statusData.lastSeen,
+        },
+      }));
+    });
+
+    // Handle typing indicators
+    socketRef.current.on('user_typing', (typingData) => {
+      if (typingData.room_id === id) {
+        setTypingUsers((prev) => ({
+          ...prev,
+          [typingData.room_id]: typingData.typing ? typingData.user_id : null,
+        }));
+
+        // Clear typing indicator after 3 seconds
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+
+        if (typingData.typing) {
+          typingTimeoutRef.current = setTimeout(() => {
+            setTypingUsers((prev) => ({
+              ...prev,
+              [typingData.room_id]: null,
+            }));
+          }, 3000);
+        }
+      }
+    });
+
+    // Get initial online status
+    socketRef.current.on('user_online_status', (statusData) => {
+      setOnlineStatus((prev) => ({
+        ...prev,
+        [statusData.user_id]: {
+          status: statusData.status,
+          lastSeen: statusData.lastSeen,
+        },
+      }));
+    });
+
     return () => {
       if (socketRef.current) {
-        socketRef.current.off('private_message');
-        socketRef.current.off('message_read_receipt');
         socketRef.current.disconnect();
       }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
-  }, [id]);
+  }, [id, user?.user_id]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -424,6 +542,20 @@ export default function ChatView() {
       lastChatRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [privateRoomPvData?.data?.messages]);
+
+  // Check online status when chat data loads
+  useEffect(() => {
+    if (privateRoomPvData?.data?.room_info?.other_user?.user_id && socketRef.current) {
+      socketRef.current.emit('get_online_status', privateRoomPvData.data.room_info.other_user.user_id);
+    }
+  }, [privateRoomPvData]);
+
+  // Handle typing indicator
+  const handleTyping = (isTyping: boolean) => {
+    if (socketRef.current && id && user?.user_id) {
+      socketRef.current.emit('user_typing', { room_id: id, user_id: user.user_id, typing: isTyping });
+    }
+  };
 
   const handleClose = () => {
     setShow(false);
@@ -434,14 +566,7 @@ export default function ChatView() {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/api/chat/private-messages/${id}`);
-
-      if (response.data && response.data.data) {
-        setPrivateRoomPvData(response.data);
-      } else if (response.data && Array.isArray(response.data.messages)) {
-        setPrivateRoomPvData({ data: response.data });
-      } else {
-        throw new Error('Invalid response format');
-      }
+      setPrivateRoomPvData(response.data);
     } catch (error) {
       console.error('Error fetching chat data:', error);
       setPrivateRoomPvData(null);
@@ -451,9 +576,12 @@ export default function ChatView() {
   };
 
   const handleSendMessage = async (messageContent: string) => {
-    if (!id || !socketRef.current) return;
+    if (!id) return;
     try {
-      return await axiosInstance.post('/api/chat/private-messages', { roomId: id, content: messageContent });
+      await axiosInstance.post('/api/chat/private-messages', {
+        roomId: id,
+        content: messageContent,
+      });
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -461,23 +589,11 @@ export default function ChatView() {
 
   const handleMessageRead = async (messageId: string, roomId: string) => {
     try {
-      await axiosInstance.post('/api/chat/message-read', {
-        message_id: messageId,
-        room_id: roomId,
-      });
-
-      setPrivateRoomPvData((prev) => ({
-        ...prev,
-        data: {
-          ...prev.data,
-          messages: prev.data.messages.map((msg) => (msg.message_id === messageId ? { ...msg, is_read: true, read_at: new Date().toISOString() } : msg)),
-        },
-      }));
-
-      if (socketRef.current) {
-        socketRef.current.emit('message_read', {
+      if (socketRef.current && user?.user_id) {
+        socketRef.current.emit('mark_message_read', {
           message_id: messageId,
           room_id: roomId,
+          user_id: user.user_id,
         });
       }
     } catch (error) {
@@ -506,17 +622,32 @@ export default function ChatView() {
   }
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div key="chatView" initial="initial" animate="animate" exit="exit" variants={pageVariants} style={styles.overlay}>
-          <Header onClose={handleClose} privateRoomPvData={privateRoomPvData} />
-          <Box mb={12}>
-            <ChatsSection privateRoomPvData={privateRoomPvData} onMessageRead={handleMessageRead} lastChatRef={lastChatRef} />
-          </Box>
-          <Keyboard onSendMessage={handleSendMessage} roomId={id as string} />
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <>
+      <style jsx global>{`
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 0.4;
+            transform: scale(0.8);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+        }
+      `}</style>
+      <AnimatePresence>
+        {show && (
+          <motion.div key="chatView" initial="initial" animate="animate" exit="exit" variants={pageVariants} style={styles.overlay}>
+            <Header onClose={handleClose} privateRoomPvData={privateRoomPvData} onlineStatus={onlineStatus} isTyping={typingUsers[id as any] === privateRoomPvData?.data?.room_info?.other_user?.user_id} />
+            <Box mb={12}>
+              <ChatsSection privateRoomPvData={privateRoomPvData} onMessageRead={handleMessageRead} lastChatRef={lastChatRef} isTyping={typingUsers[id as any] === privateRoomPvData?.data?.room_info?.other_user?.user_id} />
+            </Box>
+            <Keyboard onSendMessage={handleSendMessage} roomId={id as string} onTypingChange={handleTyping} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

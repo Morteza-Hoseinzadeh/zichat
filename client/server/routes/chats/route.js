@@ -241,7 +241,7 @@ router.post('/private-messages', verifyToken, async (req, res) => {
     // Emit socket event
     const io = req.app.get('io');
     if (io) {
-      io.to(`${otherUserId}`).emit('private_message', message);
+      // Emit to the room (not to individual users)
       io.to(`room_${roomId}`).emit('private_message', message);
     }
 

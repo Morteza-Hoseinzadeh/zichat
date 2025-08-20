@@ -1,19 +1,35 @@
 // socketHandler.js
-const socketMap = new Map();
+const onlineUsers = new Map();
 
 module.exports = function socketHandler(io) {
   io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
     // Register user
     socket.on('register_user', (userId) => {
       const userIdStr = String(userId);
 
-      if (!socketMap.has(userIdStr)) {
-        socketMap.set(userIdStr, new Set());
-      }
-      socketMap.get(userIdStr).add(socket);
+      // Store user ID in socket for later use
+      socket.userId = userIdStr;
+
+      // Store socket connection info
+      onlineUsers.set(userIdStr, {
+        socketId: socket.id,
+        status: 'online',
+        lastSeen: new Date(),
+      });
+
+      // Join user to their personal room for private messages
+      socket.join(`user_${userIdStr}`);
 
       // Notify others this user came online
-      socket.broadcast.emit('user_online', userIdStr);
+      socket.broadcast.emit('user_status_changed', {
+        user_id: userIdStr,
+        status: 'online',
+        lastSeen: null,
+      });
+
+      console.log(`User ${userIdStr} registered with socket ${socket.id}`);
     });
 
     // Join a chat room
@@ -35,20 +51,14 @@ module.exports = function socketHandler(io) {
 
         console.log('Message received:', messageData);
 
-        // Save to database (you'll need to implement this)
+        // Save to database first (you'll need to implement this)
         // const savedMessage = await saveMessageToDatabase(messageData);
 
-        // Broadcast to all users in the room except sender
-        socket.to(`room_${room_id}`).emit('receive_message', messageData);
+        // Broadcast to all users in the room including sender
+        io.to(`room_${room_id}`).emit('private_message', messageData);
 
-        // Also send to sender for confirmation
+        // Also send confirmation to sender
         socket.emit('message_sent', { ...messageData, status: 'sent' });
-
-        // Notify users about new message (for badge counts)
-        io.to(`room_${room_id}`).emit('new_message_notification', {
-          room_id,
-          message_count: 1,
-        });
       } catch (error) {
         console.error('Error sending message:', error);
         socket.emit('message_error', { error: 'Failed to send message' });
@@ -56,31 +66,24 @@ module.exports = function socketHandler(io) {
     });
 
     // Typing indicator
-    socket.on('typing_start', (data) => {
-      const { room_id, user_id } = data;
+    socket.on('user_typing', (data) => {
+      const { room_id, user_id, typing } = data;
       socket.to(`room_${room_id}`).emit('user_typing', {
         user_id,
-        typing: true,
-      });
-    });
-
-    socket.on('typing_stop', (data) => {
-      const { room_id, user_id } = data;
-      socket.to(`room_${room_id}`).emit('user_typing', {
-        user_id,
-        typing: false,
+        typing,
+        room_id,
       });
     });
 
     // Message read receipt
-    socket.on('message_read', async (data) => {
+    socket.on('mark_message_read', async (data) => {
       try {
         const { message_id, room_id, user_id } = data;
 
-        // Update in database
+        // Update in database (implement this)
         // await markMessageAsRead(message_id, user_id);
 
-        // Notify sender that message was read
+        // Notify other users in the room
         const readReceipt = {
           message_id,
           room_id,
@@ -88,10 +91,20 @@ module.exports = function socketHandler(io) {
           read_at: new Date(),
         };
 
-        io.to(`room_${room_id}`).emit('message_read_receipt', readReceipt);
+        io.to(`room_${room_id}`).emit('message_read', readReceipt);
       } catch (error) {
         console.error('Error marking message as read:', error);
       }
+    });
+
+    // Get online status
+    socket.on('get_online_status', (userId) => {
+      const status = onlineUsers.get(String(userId));
+      socket.emit('user_online_status', {
+        user_id: userId,
+        status: status ? status.status : 'offline',
+        lastSeen: status ? status.lastSeen : null,
+      });
     });
 
     // Handle disconnection
@@ -99,16 +112,20 @@ module.exports = function socketHandler(io) {
       console.log('User disconnected:', socket.id, socket.userId);
 
       if (socket.userId) {
-        // Remove socket from map
-        const userSockets = socketMap.get(socket.userId);
-        if (userSockets) {
-          userSockets.delete(socket.id);
-          if (userSockets.size === 0) {
-            socketMap.delete(socket.userId);
-            // Notify others this user went offline
-            io.emit('user_offline', socket.userId);
-          }
-        }
+        // Update user status to offline
+        onlineUsers.set(socket.userId, {
+          status: 'offline',
+          lastSeen: new Date(),
+        });
+
+        // Notify others this user went offline
+        io.emit('user_status_changed', {
+          user_id: socket.userId,
+          status: 'offline',
+          lastSeen: new Date(),
+        });
+
+        onlineUsers.delete(socket.userId);
       }
     });
 
@@ -118,5 +135,5 @@ module.exports = function socketHandler(io) {
     });
   });
 
-  return socketMap;
+  return onlineUsers;
 };
