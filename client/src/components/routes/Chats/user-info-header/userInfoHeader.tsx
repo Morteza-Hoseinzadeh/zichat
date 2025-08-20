@@ -104,24 +104,24 @@ const HeaderSection = ({ isSettingOpen, setIsSettingOpen }: any) => {
   return (
     <>
       <Box sx={styles.header_container}>
-        <Box display="flex" alignItems="center" gap={1.2}>
+        <Box position={'relative'} display="flex" alignItems="center" gap={1.2}>
+          {user?.user_status?.length && (
+            <Box sx={styles.note_container}>
+              <Typography color="text.primary" fontWeight={600} variant="body1">
+                {user?.user_status?.length > 30 ? user?.user_status?.slice(0, 30) + '...' : user?.user_status}
+              </Typography>
+            </Box>
+          )}
           <Box sx={{ border: '1px solid', borderColor: checkStatus, borderRadius: '50%', overflow: 'hidden' }}>
             <Avatar src={user?.profile_picture} alt={`${user?.username}.png`} sx={{ width: '65px', height: '65px' }} />
           </Box>
-          <Box display="flex" flexDirection="column" position={'relative'}>
+          <Box display="flex" flexDirection="column">
             {user?.user_status?.length > 0 ? (
-              <>
-                <Box sx={styles.note_container}>
-                  <Typography color="text.primary" fontWeight={600} variant="body1">
-                    {user?.user_status?.length > 36 ? user?.user_status?.slice(0, 35) + '...' : user?.user_status}
-                  </Typography>
-                </Box>
-                <Box sx={styles.status_container} onClick={() => handleOpenModal('edit')}>
-                  <Typography color="primary.main" fontWeight={600} variant="body2">
-                    ویرایش وضعیت
-                  </Typography>
-                </Box>
-              </>
+              <Box sx={styles.status_container} onClick={() => handleOpenModal('edit')}>
+                <Typography color="primary.main" fontWeight={600} variant="body2">
+                  ویرایش وضعیت
+                </Typography>
+              </Box>
             ) : (
               <Box sx={styles.status_container} onClick={() => handleOpenModal('add')}>
                 <Typography color="primary.main" fontWeight={600} variant="body2">
@@ -498,7 +498,7 @@ const styles = {
   note_container: {
     position: 'absolute',
     top: -43,
-    right: -80,
+    right: -7,
     p: '8px 12px',
     borderRadius: '8px',
     backgroundColor: 'background.paper',

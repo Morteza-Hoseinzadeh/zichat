@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useParams, useRouter } from 'next/navigation';
 
@@ -18,29 +18,9 @@ import { MdNotificationsOff, MdReply } from 'react-icons/md';
 import { TbPhoto, TbMapPin, TbChartBar, TbAddressBook, TbFile } from 'react-icons/tb';
 
 import CustomSnackbar from '@/components/custom/CustomSnackbar';
-
-const mock = [
-  {
-    id: 1,
-    type: 'user',
-    chat_type: 'PV',
-    name: ' حسین زاده',
-    date: '15 فروردین 1404',
-    unreadCount: 2,
-    avatar: '/assets/avatars/avatar.jpg',
-    last_seen: '22:14',
-    status: 'offline',
-    pinned_messages: ['xyz-abcde-fgh'],
-    messages: [...Array(10)].map((_, i) => ({
-      id: `msg-${i + 1}`,
-      message: i % 2 === 0 ? 'سلام قربونت تو چطوری' : 'سلام، حالت چطوره؟',
-      timestamp: '14:28',
-      self: i % 2 === 0,
-      read_by_receiver: true,
-      message_edited: i % 3 === 0,
-    })),
-  },
-];
+import useGet from '@/utils/hooks/API/useGet';
+import { useAuth } from '@/utils/contexts/AuthContext';
+import axiosInstance from '@/utils/hooks/axiosInstance';
 
 const pageVariants: any = {
   initial: { y: '100%', opacity: 0 },
@@ -56,9 +36,11 @@ const pageVariants: any = {
   },
 };
 
-function Header({ onClose }: { onClose: () => void }) {
+function Header({ onClose, privateRoomPvData }: { onClose: () => void; privateRoomPvData: any }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  const room_info = privateRoomPvData?.data?.room_info;
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -75,10 +57,10 @@ function Header({ onClose }: { onClose: () => void }) {
         <IconButton onClick={onClose}>
           <TbArrowRight />
         </IconButton>
-        <img src="/assets/avatars/avatar.jpg" alt="avatar" width={65} height={65} />
+        <img src={room_info?.other_user?.profile_picture} alt={room_info?.other_user?.username} width={65} height={65} />
         <Box>
           <Typography variant="h6" fontWeight={900} color="text.primary">
-            حسین زاده
+            {room_info?.other_user?.username}
           </Typography>
           <Box display="flex" alignItems="center" gap={0.5}>
             <Box sx={{ backgroundColor: status.color, width: 12, height: 12, borderRadius: '50%' }} />
@@ -213,8 +195,11 @@ function Keyboard() {
   );
 }
 
-function ChatsSection() {
+function ChatsSection({ privateRoomPvData }) {
+  const { user } = useAuth();
+
   const theme = useTheme();
+
   const [hovered, setHovered] = useState<string | null>(null);
 
   const [showSnackbar, setShowSnackbar] = useState(false);
@@ -240,73 +225,85 @@ function ChatsSection() {
 
   const fontSize = 17;
 
-  return mock.map((chat, index) => (
-    <Box key={index} flex={1} display="flex" flexDirection="column" mt={1} mx="16px" sx={{ fontSize }}>
-      <p style={{ textAlign: 'center', color: theme.palette.text.disabled }}>{ConvertToPersianDigit(chat.date)}</p>
-      {chat.messages.map((msg, i) => {
-        const isSelf = msg.self;
-        const isHovered = hovered === msg.id;
-        const color = isSelf ? theme.palette.primary.dark : theme.palette.secondary.dark;
+  return privateRoomPvData?.data?.messages?.map((msg, index) => {
+    const isSelf = msg.sender_id === user?.user_id;
+    const isHovered = hovered === msg.message_id;
+    const color = isSelf ? theme.palette.primary.dark : theme.palette.secondary.dark;
 
-        return (
-          <Box key={i} width="100%" sx={{ display: 'flex', justifyContent: isSelf ? 'right' : 'left', mb: 3 }}>
-            <Box display="flex" alignItems="center" flexDirection={isSelf ? 'row' : 'row-reverse'} gap={1} onMouseEnter={() => setHovered(msg.id)} onMouseLeave={() => setHovered(null)}>
-              <Box sx={{ ...styles.chat_bubbles, backgroundColor: color, borderBottomLeftRadius: isSelf ? '24px' : '0', borderBottomRightRadius: isSelf ? '0' : '24px' }}>
-                <p style={{ color: theme.palette.text.primary }}>{msg.message}</p>
-                <Box mt={0.5} display="flex" alignItems="center" justifyContent="space-between" flexDirection={isSelf ? 'row' : 'row-reverse'} mx={0.5}>
-                  <p style={{ color: theme.palette.text.disabled }}>{ConvertToPersianDigit(msg.timestamp)}</p>
-                  {isSelf && <RiCheckDoubleLine color={msg.read_by_receiver ? '#0041c2' : theme.palette.text.disabled} />}
-                </Box>
-                {msg.message_edited && (
-                  <Box display="flex" alignItems="center" justifyContent={isSelf ? 'left' : 'right'} color={theme.palette.text.disabled} fontSize={fontSize - 4} gap={0.5}>
-                    <span>ویرایش شده</span>
-                    <TbEdit />
-                  </Box>
-                )}
+    // Convert message status to readable format
+    const getReadStatus = () => {
+      if (isSelf) {
+        return msg.is_read === null ? theme.palette.secondary.main : theme.palette.text.disabled;
+      }
+      return theme.palette.text.disabled;
+    };
+
+    return (
+      <React.Fragment key={index}>
+        <Box width="100%" sx={{ display: 'flex', justifyContent: isSelf ? 'right' : 'left', my: 3 }}>
+          <Box display="flex" alignItems="center" flexDirection={isSelf ? 'row' : 'row-reverse'} gap={1} onMouseEnter={() => setHovered(msg.message_id)} onMouseLeave={() => setHovered(null)}>
+            <Box sx={{ ...styles.chat_bubbles, backgroundColor: color, borderBottomLeftRadius: isSelf ? '24px' : '0', borderBottomRightRadius: isSelf ? '0' : '24px' }}>
+              <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
+                {msg.content}
+              </Typography>
+
+              <Box mt={0.5} display="flex" alignItems="center" justifyContent="space-between" flexDirection={isSelf ? 'row' : 'row-reverse'} mx={0.5}>
+                <p style={{ color: theme.palette.text.disabled }}>{ConvertToPersianDigit(new Date(msg.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }))}</p>
+
+                {isSelf && <RiCheckDoubleLine color={getReadStatus()} />}
               </Box>
-              {isHovered && (
-                <Box display="flex" flexDirection="column" alignItems="center">
-                  <IconButton onClick={(e) => handleMenuClick(e, msg.id)}>
-                    <RxHamburgerMenu size={26} />
-                  </IconButton>
-                  <IconButton>
-                    <TbEdit size={26} />
-                  </IconButton>
+
+              {msg.is_edited === 1 && (
+                <Box display="flex" alignItems="center" justifyContent={isSelf ? 'left' : 'right'} color={theme.palette.text.disabled} fontSize={fontSize - 4} gap={0.5}>
+                  <span>ویرایش شده</span>
+                  <TbEdit />
                 </Box>
               )}
-              <Menu anchorEl={menuAnchorEl} open={openMenuId === msg.id} onClose={handleMenuClose}>
-                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                  <MdReply />
-                  پاسخ
-                </MenuItem>
-                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleCopyMessage(chat.messages)}>
-                  <TbCopy />
-                  کپی
-                </MenuItem>
-                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                  <TbEdit />
-                  ویرایش
-                </MenuItem>
-                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                  <TbTrash />
-                  حذف
-                </MenuItem>
-                <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
-                  <TbArrowForward />
-                  فوروارد
-                </MenuItem>
-              </Menu>
             </Box>
+
+            {isHovered && (
+              <Box display="flex" flexDirection="column" alignItems="center">
+                <IconButton onClick={(e) => handleMenuClick(e, msg.message_id)}>
+                  <RxHamburgerMenu size={26} />
+                </IconButton>
+                <IconButton>
+                  <TbEdit size={26} />
+                </IconButton>
+              </Box>
+            )}
+
+            <Menu anchorEl={menuAnchorEl} open={openMenuId === msg.message_id} onClose={handleMenuClose}>
+              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                <MdReply />
+                پاسخ
+              </MenuItem>
+              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleCopyMessage(msg.content)}>
+                <TbCopy />
+                کپی
+              </MenuItem>
+              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                <TbEdit />
+                ویرایش
+              </MenuItem>
+              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                <TbTrash />
+                حذف
+              </MenuItem>
+              <MenuItem sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => handleMenuClose()}>
+                <TbArrowForward />
+                فوروارد
+              </MenuItem>
+            </Menu>
           </Box>
-        );
-      })}
-      {showSnackbar && (
-        <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="success">
-          <span>پیام کپی شد!</span>
-        </CustomSnackbar>
-      )}
-    </Box>
-  ));
+        </Box>
+        {showSnackbar && (
+          <CustomSnackbar open={showSnackbar} onClose={() => setShowSnackbar(false)} variant="success">
+            <span>پیام کپی شد!</span>
+          </CustomSnackbar>
+        )}
+      </React.Fragment>
+    );
+  });
 }
 
 export default function ChatView() {
@@ -314,20 +311,36 @@ export default function ChatView() {
   const router = useRouter();
   const [show, setShow] = useState(true);
 
-  const chat = mock.find((c) => String(c.id) === String(id));
-  if (!chat) return null;
+  const [privateRoomPvData, setPrivateRoomPvData] = useState([]);
 
   const handleClose = () => {
     setShow(false);
     setTimeout(() => router.push('/'), 150);
   };
 
+  async function handleGetChatData() {
+    try {
+      const response = await axiosInstance.get(`/api/chat/private-messages/${id}`);
+      return setPrivateRoomPvData(response?.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    handleGetChatData();
+  }, [id]);
+
+  if (!privateRoomPvData) return null;
+
   return (
     <AnimatePresence>
       {show && (
         <motion.div key="chatView" initial="initial" animate="animate" exit="exit" variants={pageVariants} style={styles.overlay}>
-          <Header onClose={handleClose} />
-          <ChatsSection />
+          <Header onClose={handleClose} privateRoomPvData={privateRoomPvData} />
+          <Box mx={1}>
+            <ChatsSection privateRoomPvData={privateRoomPvData} />
+          </Box>
           <Keyboard />
         </motion.div>
       )}
@@ -343,7 +356,7 @@ const styles: any = {
     backgroundRepeat: 'repeat',
     backgroundAttachment: 'fixed',
     flex: 1,
-    minHeight: '100%',
+    minHeight: '100vh',
   },
   header: {
     padding: '12px 16px',
@@ -363,7 +376,7 @@ const styles: any = {
     gap: 1,
     width: '100%',
     backgroundColor: 'background.paper',
-    position: 'sticky',
+    position: 'fixed',
     bottom: 0,
     py: 2,
     borderRadius: '24px 24px 0px 0px',

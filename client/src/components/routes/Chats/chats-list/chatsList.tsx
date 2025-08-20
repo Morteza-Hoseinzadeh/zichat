@@ -11,6 +11,7 @@ import { useAuth } from '@/utils/contexts/AuthContext';
 import useGet from '@/utils/hooks/API/useGet';
 import axiosInstance from '@/utils/hooks/axiosInstance';
 import { getToken } from '@/utils/functions/auth/service';
+import { RiCheckDoubleLine } from 'react-icons/ri';
 
 const mock = [];
 
@@ -77,10 +78,8 @@ export default function ChatsList() {
 
   const [value, setValue] = React.useState(0);
 
-  const { data: chatListApi, loading: chatListLoadingApi, refetch: chatListRefetchApi } = useGet('/api/chat/list');
+  const { data: chatListApi, loading: chatListLoadingApi, refetch: chatListRefetchApi } = useGet('/api/chat/conversations');
   const chatListData = useMemo<any>(() => chatListApi || [], [chatListApi]);
-
-  console.log(chatListData);
 
   useEffect(() => {
     socketRef.current = io('http://localhost:5000');
@@ -94,8 +93,8 @@ export default function ChatsList() {
     };
   }, []);
 
-  const handleGetChatData = (chat_id: string | number) => {
-    router.push(`/chat/pv/${chat_id}`);
+  const handleGetChatData = (room_id: string | number) => {
+    return router.push(`/chat/pv/${room_id}`);
   };
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -123,35 +122,47 @@ export default function ChatsList() {
           <CustomTabPanel key={tabIndex} value={value} index={tabIndex}>
             <motion.div variants={itemVariants}>
               <ZichatNewsPinned handleGetChatData={handleGetChatData} />
-              {mock
-                // .filter((chat) => chat.type === tabTypes[tabIndex])
-                .map((chat, index) => (
-                  <Box key={chat.id} sx={{ ...styles.chats_container, borderRadius: index === mock.length - 1 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
-                    <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.user_id)}>
-                      <Box component="img" src={chat.profile_picture} alt={chat.username} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
-                      <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
-                          <Typography variant="h6" color="text.primary" fontWeight={900}>
-                            {chat.username}
-                          </Typography>
-                          <Typography variant="body2" color="text.primary">
-                            {ConvertToPersianDigit(chat.timestamp)}
-                          </Typography>
-                        </Box>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
-                          <Typography variant="body1" color="text.secondary" noWrap>
-                            {chat.lastMessage}
-                          </Typography>
-                          {chat.unreadCount > 0 && (
-                            <Box mt={0.5} bgcolor="secondary.main" color="black" px={1} borderRadius="12px" fontSize="1em" display="inline-block">
-                              {ConvertToPersianDigit(chat.unreadCount)}
+              {chatListData?.data?.list
+                .filter(() => chatListData?.data?.type === tabTypes[tabIndex])
+                .map((chat, index) => {
+                  const convert_timeStamp = chat?.last_message_time?.split('T')[1].split('.')[0].slice(0, 5);
+                  return (
+                    chat.last_message !== null && (
+                      <Box key={chat.room_id} sx={{ ...styles.chats_container, borderRadius: index === chatListData?.data?.list?.length - 2 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
+                        <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.room_id)}>
+                          <Box component="img" src={chat.other_profile_picture} alt={chat.other_username} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
+                          <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
+                            <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
+                              <Typography variant="h6" color="text.primary" fontWeight={900}>
+                                {chat.other_username}
+                              </Typography>
+                              <Typography variant="body2" color="text.primary">
+                                {ConvertToPersianDigit(convert_timeStamp)}
+                              </Typography>
                             </Box>
-                          )}
+                            <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
+                              <Box display={'flex'} alignItems={'center'} gap={1}>
+                                <Typography variant="body1" color="text.secondary" noWrap>
+                                  {chat.last_message}
+                                </Typography>
+                                {chat.is_last_message_from_me === 1 && (
+                                  <Typography variant="body1" component={'span'} color={chat.message_status === 'unread' ? 'text.disabled' : 'secondary.main'}>
+                                    <RiCheckDoubleLine />
+                                  </Typography>
+                                )}
+                              </Box>
+                              {chat.unread_count > 0 && (
+                                <Box mt={0.5} bgcolor="secondary.main" color="black" px={1} borderRadius="12px" fontSize="1em" display="inline-block">
+                                  {ConvertToPersianDigit(chat.unread_count)}
+                                </Box>
+                              )}
+                            </Box>
+                          </Box>
                         </Box>
                       </Box>
-                    </Box>
-                  </Box>
-                ))}
+                    )
+                  );
+                })}
             </motion.div>
           </CustomTabPanel>
         ))}
