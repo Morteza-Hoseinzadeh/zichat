@@ -213,7 +213,7 @@ function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef }) {
   // Mark messages as read when they come into view
   useEffect(() => {
     if (privateRoomPvData?.data?.messages) {
-      privateRoomPvData.data.messages.forEach((msg) => {
+      privateRoomPvData?.data?.messages.forEach((msg) => {
         if (!msg.is_read && msg.sender_id !== user?.user_id) {
           onMessageRead(msg.message_id, privateRoomPvData.data.room_info.room_id);
         }
@@ -285,7 +285,7 @@ function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef }) {
 
             const getReadStatus = () => {
               if (isSelf) {
-                return msg.is_read ? theme.palette.secondary.main : theme.palette.text.disabled;
+                return msg.is_read === 1 ? theme.palette.secondary.main : theme.palette.text.disabled;
               }
               return theme.palette.text.disabled;
             };
@@ -385,18 +385,6 @@ export default function ChatView() {
       }
     });
 
-    socketRef.current.on('receive_message', (messageData) => {
-      if (messageData.room_id === id) {
-        setPrivateRoomPvData((prev) => ({
-          ...prev,
-          data: {
-            ...prev.data,
-            messages: [...(prev.data?.messages || []), messageData],
-          },
-        }));
-      }
-    });
-
     socketRef.current.on('private_message', (messageData) => {
       if (messageData.room_id === id) {
         setPrivateRoomPvData((prev) => ({
@@ -423,7 +411,6 @@ export default function ChatView() {
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.off('receive_message');
         socketRef.current.off('private_message');
         socketRef.current.off('message_read_receipt');
         socketRef.current.disconnect();
@@ -466,19 +453,7 @@ export default function ChatView() {
   const handleSendMessage = async (messageContent: string) => {
     if (!id || !socketRef.current) return;
     try {
-      const response = await axiosInstance.post('/api/chat/private-messages', { roomId: id, content: messageContent });
-
-      const messageData = response.data.data || response.data;
-
-      socketRef.current.emit('send_message', messageData);
-
-      setPrivateRoomPvData((prev) => ({
-        ...prev,
-        data: {
-          ...prev.data,
-          messages: [...prev.data.messages, messageData],
-        },
-      }));
+      return await axiosInstance.post('/api/chat/private-messages', { roomId: id, content: messageContent });
     } catch (error) {
       console.error('Error sending message:', error);
     }
