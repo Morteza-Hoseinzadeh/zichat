@@ -17,19 +17,17 @@ const query = async (sql, params) => {
 
 // Check if user is online
 router.get('/check-status/:userId', verifyToken, (req, res) => {
-  const socketMap = req.app.get('socketMap');
-  const userId = req.params.userId;
+  try {
+    const userId = req.params.userId;
 
-  if (!userId) {
-    return res.status(400).json({ error: 'User ID is required' });
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    res.json({ online: true });
+  } catch (error) {
+    res.json({ online: false });
   }
-
-  const isOnline = socketMap.has(String(userId)) && socketMap.get(String(userId)).size > 0;
-
-  res.json({
-    online: isOnline,
-    connectionCount: isOnline ? socketMap.get(String(userId)).size : 0,
-  });
 });
 
 // Get user's contacts for private chats

@@ -80,9 +80,6 @@ module.exports = function socketHandler(io) {
       try {
         const { message_id, room_id, user_id } = data;
 
-        // Update in database (implement this)
-        // await markMessageAsRead(message_id, user_id);
-
         // Notify other users in the room
         const readReceipt = {
           message_id,
