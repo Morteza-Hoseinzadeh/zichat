@@ -126,7 +126,7 @@ export default function ChatsList() {
                     chat.last_message !== null && (
                       <Box key={chat.room_id} sx={{ ...styles.chats_container, borderRadius: index === chatListData?.data?.list?.length - 2 ? '0 0 12px 12px' : '0', p: 2, my: 1 }}>
                         <Box width={'100%'} display="flex" alignItems="center" gap={2} onClick={() => handleGetChatData(chat.room_id)}>
-                          <Box component="img" src={chat.other_profile_picture} alt={chat.other_username} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'secondary.main' }} />
+                          <Box component="img" src={chat.other_profile_picture} alt={chat.other_username} sx={{ width: 60, height: 60, borderRadius: '50%', border: '1px solid', borderColor: 'primary.main' }} />
                           <Box width={'100%'} display={'flex'} alignItems={'center'} flexDirection={'column'} justifyContent={'space-between'} pl={0.5}>
                             <Box display="flex" alignItems="center" justifyContent="space-between" width={'100%'}>
                               <Typography variant="h6" color="text.primary" fontWeight={900}>

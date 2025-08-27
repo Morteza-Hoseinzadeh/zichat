@@ -333,7 +333,7 @@ function ChatsSection({ privateRoomPvData, onMessageRead, lastChatRef, isTyping 
 
             const getReadStatus = () => {
               if (isSelf) {
-                return msg.is_read === 1 ? theme.palette.secondary.main : theme.palette.text.disabled;
+                return msg.message_status === 'read' ? theme.palette.secondary.main : theme.palette.text.disabled;
               }
               return theme.palette.text.disabled;
             };
@@ -559,7 +559,7 @@ export default function ChatView() {
 
   const handleClose = () => {
     setShow(false);
-    setTimeout(() => router.push('/'), 150);
+    setTimeout(() => router.push('/chat'), 150);
   };
 
   const handleGetChatData = async () => {

@@ -61,88 +61,97 @@ router.get('/contacts', verifyToken, async (req, res) => {
   }
 });
 
-// Get user's private chat list
+// Simplified and more efficient version
 router.get('/conversations', verifyToken, async (req, res) => {
   try {
     const { user_id } = req.user;
 
     const query_text = `
+      WITH LastMessages AS (
+        SELECT 
+          room_id,
+          MAX(created_at) as last_message_time
+        FROM zichat.private_messages
+        GROUP BY room_id
+      ),
+      UnreadCounts AS (
+        SELECT 
+          pm.room_id,
+          COUNT(*) as unread_count
+        FROM zichat.private_messages pm
+        LEFT JOIN zichat.message_read_status ms ON pm.chat_id = ms.message_id AND ms.user_id = ?
+        WHERE pm.sender_id != ?
+        AND (ms.message_id IS NULL OR ms.is_read = 0)
+        GROUP BY pm.room_id
+      )
+
       SELECT 
-         room.id as room_id,
-         CASE 
-             WHEN room.user1_id = ? THEN room.user2_id
-             ELSE room.user1_id
-         END as other_user_id,
-         other_user.username as other_username,
-         other_user.profile_picture as other_profile_picture,
-         other_user.status as other_user_status,
+        room.id as room_id,
+        CASE 
+          WHEN room.user1_id = ? THEN room.user2_id
+          ELSE room.user1_id
+        END as other_user_id,
+        other_user.username as other_username,
+        other_user.profile_picture as other_profile_picture,
+        other_user.status as other_user_status,
 
-         pm.content as last_message,
-         pm.created_at as last_message_time,
-         pm.sender_id as last_message_sender_id,
+        pm.content as last_message,
+        pm.created_at as last_message_time,
+        pm.sender_id as last_message_sender_id,
 
-         CASE 
-             WHEN pm.sender_id = ? THEN true
-             ELSE false
-         END as is_last_message_from_me,
+        -- Is last message from me
+        CASE WHEN pm.sender_id = ? THEN true ELSE false END as is_last_message_from_me,
 
-         -- وضعیت خوانده شدن پیام
-         CASE 
-             WHEN pm.sender_id = ? THEN 
-                 CASE 
-                     WHEN ms.is_read = 1 THEN 'read'
-                     ELSE 'sent'
-                 END
-             ELSE 
-                 CASE 
-                     WHEN ms.is_read = 1 THEN 'read_by_me'
-                     ELSE 'unread'
-                 END
-         END as message_status,
+        -- Message status
+        CASE 
+          WHEN pm.sender_id = ? THEN 
+            CASE 
+              WHEN EXISTS (
+                SELECT 1 FROM zichat.message_read_status 
+                WHERE message_id = pm.chat_id AND user_id != ? AND is_read = 1
+              ) THEN 'read'
+              ELSE 'sent'
+            END
+          ELSE 
+            CASE 
+              WHEN EXISTS (
+                SELECT 1 FROM zichat.message_read_status 
+                WHERE message_id = pm.chat_id AND user_id = ? AND is_read = 1
+              ) THEN 'read_by_me'
+              ELSE 'unread_by_me'
+            END
+        END as message_status,
 
-         ms.read_at as read_at,
+        -- Read at timestamp
+        (
+          SELECT read_at FROM zichat.message_read_status 
+          WHERE message_id = pm.chat_id 
+          AND user_id = CASE WHEN pm.sender_id = ? THEN room.user1_id = ? OR room.user2_id = ? ELSE ? END
+          LIMIT 1
+        ) as read_at,
 
-         COALESCE(
-           (SELECT COUNT(*) 
-            FROM zichat.message_read_status ms2 
-            INNER JOIN zichat.private_messages pm2 ON ms2.message_id = pm2.chat_id
-            WHERE pm2.room_id = room.id 
-            AND ms2.user_id = ?
-            AND ms2.is_read = 0),
-           0
-         ) as unread_count,
+        COALESCE(uc.unread_count, 0) as unread_count,
 
-         -- اطلاعات اضافی درباره آخرین پیام
-         pm.chat_id as last_message_id,
-         pm.edited as is_last_message_edited
+        pm.chat_id as last_message_id,
+        pm.edited as is_last_message_edited
 
-       FROM zichat.private_rooms room
-       INNER JOIN zichat.users other_user ON (
-           other_user.user_id = CASE 
-               WHEN room.user1_id = ? THEN room.user2_id
-               ELSE room.user1_id
-           END
-       )
-       LEFT JOIN (
-         SELECT room_id, chat_id, content, created_at, sender_id, edited,
-                ROW_NUMBER() OVER (PARTITION BY room_id ORDER BY created_at DESC) as rn
-         FROM zichat.private_messages
-       ) pm ON room.id = pm.room_id AND pm.rn = 1
-       LEFT JOIN zichat.message_read_status ms ON (
-         ms.message_id = pm.chat_id 
-         AND ms.user_id = ?
-       )
-       WHERE room.user1_id = ? 
-          OR room.user2_id = ?
-       ORDER BY COALESCE(pm.created_at, room.created_at) DESC;
+      FROM zichat.private_rooms room
+      INNER JOIN zichat.users other_user ON (
+        other_user.user_id = CASE 
+          WHEN room.user1_id = ? THEN room.user2_id
+          ELSE room.user1_id
+        END
+      )
+      LEFT JOIN LastMessages lm ON room.id = lm.room_id
+      LEFT JOIN zichat.private_messages pm ON room.id = pm.room_id AND pm.created_at = lm.last_message_time
+      LEFT JOIN UnreadCounts uc ON room.id = uc.room_id
+      WHERE room.user1_id = ? OR room.user2_id = ?
+      ORDER BY COALESCE(pm.created_at, room.created_at) DESC;
     `;
 
-    // روش صحیح دریافت نتیجه
-    const results = await query(query_text, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id]);
+    const results = await query(query_text, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id]);
 
-    // بسته به نوع درایور، ممکنه results آرایه‌ای از نتایج باشه
     const chats = Array.isArray(results) ? results : results[0] || [];
-
     res.json({ status: 200, data: { type: 'private', list: chats } });
   } catch (error) {
     console.error('Error fetching private chats:', error);
@@ -293,7 +302,7 @@ router.get('/private-messages/:roomId', verifyToken, async (req, res) => {
 
     const otherUser = otherUserResult[0];
 
-    // Get messages with enhanced sender info and read status
+    // Get messages with simplified but accurate read status
     const [messages] = await connection.promise().query(
       `
       SELECT 
@@ -309,31 +318,49 @@ router.get('/private-messages/:roomId', verifyToken, async (req, res) => {
         u.username as sender_username,
         u.profile_picture as sender_avatar,
         u.status as sender_status,
-        mrs.is_read,
-        mrs.read_at,
+        
+        -- Check if current user has read this message
+        CASE 
+          WHEN mrs.message_id IS NOT NULL THEN 1
+          ELSE 0
+        END as is_read_by_me,
+        
+        mrs.read_at as read_at_by_me,
+        
+        -- Check if message is sent by current user
         CASE 
           WHEN pm.sender_id = ? THEN TRUE
           ELSE FALSE
         END as is_sent_by_me,
+        
+        -- Message status logic
         CASE 
+          -- Messages I sent
           WHEN pm.sender_id = ? THEN 
             CASE 
-              WHEN mrs.is_read = 1 THEN 'read'
+              -- Check if recipient exists in read status (anyone but me)
+              WHEN EXISTS (
+                SELECT 1 FROM message_read_status 
+                WHERE message_id = pm.chat_id AND user_id != ?
+              ) THEN 'read'
               ELSE 'sent'
             END
+          -- Messages others sent
           ELSE 
             CASE 
-              WHEN mrs.is_read = 1 THEN 'read_by_me'
-              ELSE 'unread'
+              -- Check if I have read it
+              WHEN mrs.message_id IS NOT NULL THEN 'read_by_me'
+              ELSE 'unread_by_me'
             END
         END as message_status
+        
       FROM private_messages pm
       JOIN users u ON pm.sender_id = u.user_id
       LEFT JOIN message_read_status mrs ON pm.chat_id = mrs.message_id AND mrs.user_id = ?
       WHERE pm.room_id = ?
       ORDER BY pm.created_at ASC
       `,
-      [user_id, user_id, user_id, roomId]
+      [user_id, user_id, user_id, user_id, roomId]
     );
 
     // Mark received messages as read
